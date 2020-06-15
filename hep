@@ -1,0 +1,2 @@
+#!/bin/sh
+exec "$HOME/miniconda3/envs/hep/bin/python" "hep.py" "$@"

@@ -1,0 +1,5 @@
+import PeakDetectionAlg
+from ecglab_fast import ecglab_fast
+from ecglab_slow import ecglab_slow
+from pan_tompkins import pan_tompkins
+from PeakDetectionAlg import ManualPeakDetection
