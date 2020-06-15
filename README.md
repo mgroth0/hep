@@ -32,4 +32,4 @@ Development
 Credits
 -
 
-- Isaac,Brain Modulation Lab
+- Isaac, Brain Modulation Lab
