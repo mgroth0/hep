@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
 import math
 
-from numpy import ones
-from scipy.signal import bilinear, filtfilt
+from numpy import ones, inf
+from scipy.signal import bilinear, filtfilt, lfilter, butter
 from matplotlib import pyplot as plt
-
-from defaults import *
-
+from mlib.boot.mlog import log
+from mlib.boot.mutil import logverb, composed, File, bandstop, flat, itr, assert_int, mymax, num2str, strcmp, disp, arr
 
 class PeakDetectionAlg(ABC):
     def __init__(self, version=inf):
@@ -29,10 +28,10 @@ class PeakDetectionAlg(ABC):
         pass
 
     def name(self):
-        return self.abr() + '_' + str(self.version).replace('.','_')
+        return self.abr() + '_' + str(self.version).replace('.', '_')
 
     @staticmethod
-    def standardPP(ecg,Fs):
+    def standardPP(ecg, Fs):
         log('filter')
         [B, A] = butter(4, 1 / (Fs / 2), 'high')  # cf = 1 Hz
         ecg_flt2 = filtfilt(B, A, ecg)
@@ -47,19 +46,18 @@ class PeakDetectionAlg(ABC):
 
     @classmethod
     def abr(cls):
-        import pan_tompkins
-        import ecglab_fast
-        import ecglab_slow
+        from qrsalg import pan_tompkins
+        from qrsalg import ecglab_fast
+        from qrsalg import ecglab_slow
         # noinspection PyTypeChecker
         return {
-            pan_tompkins.pan_tompkins: 'pan',
-            ecglab_fast.ecglab_fast  : 'fast',
-            ecglab_slow.ecglab_slow  : 'slow',
-            ManualPeakDetection      : 'manual'
+            pan_tompkins       : 'pan',
+            ecglab_fast        : 'fast',
+            ecglab_slow        : 'slow',
+            ManualPeakDetection: 'manual'
         }[cls]
 
     def fixpeaks(self, r_indices, ecg_flt, AUTO=True):
-
         FIX_WIDTH = 100
 
         r_indices = flat(r_indices)
@@ -72,7 +70,7 @@ class PeakDetectionAlg(ABC):
         if AUTO:
             log('automatically fixing all heartbeats')
         for i in itr(r_indices):
-            if i == 0 or i == len(r_indices) -1:
+            if i == 0 or i == len(r_indices) - 1:
                 continue
             the_lat = assert_int(r_indices[i])
             mn = the_lat - FIX_WIDTH
@@ -106,8 +104,8 @@ class HEPLAB_Alg(PeakDetectionAlg, ABC):
         Q = 3
         gain = 1.2
         w0 = 17.5625 * 2 * math.pi
-        NUM = gain * (w0 ** 2)
-        DEN = [1, (w0 / Q), w0 ** 2]
+        NUM = gain * (w0**2)
+        DEN = [1, (w0 / Q), w0**2]
         [B, A] = bilinear(NUM, DEN, Fs)
 
         ecg_flt = filtfilt(B, A, ecg)
@@ -119,13 +117,13 @@ class HEPLAB_Alg(PeakDetectionAlg, ABC):
         ecg_flt = lfilter(B, A, ecg_flt)
         ecg_flt = ecg_flt / max(abs(ecg_flt))
 
-        ecg_flt = ecg_flt ** 2
+        ecg_flt = ecg_flt**2
 
         log('integration')
         N = round(0.150 * Fs)
         ecg_flt = 1 / N * lfilter(ones(N), 1, ecg_flt)
 
-        self.ecg_flt2 = self.standardPP(ecg,Fs)
+        self.ecg_flt2 = self.standardPP(ecg, Fs)
 
         return ecg_flt
 
@@ -140,11 +138,11 @@ class ManualPeakDetection(PeakDetectionAlg):
         1  : 'init',
         1.1: 'fixPeaks'
     }
-    MANUAL_FILE =File('HEP/data/EP1163_10min_qrs_manual.mat')
+    MANUAL_FILE = File('_data/EP1163_10min_qrs_manual.mat')
     def preprocess(self, ecg, Fs):
-        return self.standardPP(ecg,Fs)
+        return self.standardPP(ecg, Fs)
     def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
         qrs = arr(self.MANUAL_FILE['heartbeatevents']['py'][0][0]).flatten()
         if self.version >= 1:
-            qrs = self.fixpeaks(qrs,ecg_flt,AUTO=True)
+            qrs = self.fixpeaks(qrs, ecg_flt, AUTO=True)
         return qrs

@@ -1,5 +1,5 @@
-import PeakDetectionAlg
-from ecglab_fast import ecglab_fast
-from ecglab_slow import ecglab_slow
-from pan_tompkins import pan_tompkins
-from PeakDetectionAlg import ManualPeakDetection
+import qrsalg.PeakDetectionAlg as PeakDetectionAlg
+from qrsalg.ecglab_fast import ecglab_fast
+from qrsalg.ecglab_slow import ecglab_slow
+from qrsalg.pan_tompkins import pan_tompkins
+from qrsalg.PeakDetectionAlg import ManualPeakDetection

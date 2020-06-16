@@ -1,8 +1,8 @@
 from numpy import fix, mean, ones
 
-from loggy import log
-from PeakDetectionAlg import PeakDetectionAlg, HEPLAB_Alg
-from mutil import err, mymax, assert_int, Progress
+from mlib.boot.mlog import log
+from qrsalg.PeakDetectionAlg import HEPLAB_Alg
+from mlib.boot.mutil import arr, Progress, mymax, bandstop
 
 class ecglab_slow(HEPLAB_Alg):
     def versions(cls): return {1: 'init'}

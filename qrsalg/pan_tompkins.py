@@ -2,8 +2,7 @@
 # started there, then got help from a matlab alg, wikipedia, and
 # https://github.com/berndporr/py-ecg-detectors/blob/master/ecgdetectors.py
 
-from PeakDetectionAlg import PeakDetectionAlg
-from defaults import *
+from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 
 class pan_tompkins(PeakDetectionAlg):
     def versions(cls): return {1: 'init'}

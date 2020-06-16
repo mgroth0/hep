@@ -1,16 +1,14 @@
-from FigData import makefig
+from mlib.FigData import makefig, Line, MultiPlot, addToCurrentFigSet
 import sys
-sys.path.append('/Users/matt/Desktop/registered/todo/NAP_code/MITili/HEP')
-sys.path.append('/Users/matt/Desktop/registered/todo/NAP_code/MITili/HEP/qrsalg')
-import initFun
-initFun.addSysPaths()
-from defaults import *
 import HEP_lib
+from mlib.boot.mutil import arr
+from mlib.boot.mlog import log
 from HEP_lib import *
 import HEP_Params
 from HEP_Params import *
 # import HEP_Main
 from qrsalg import *
+import numpy as np
 
 
 def compare_IBI(s1, s2):
@@ -31,12 +29,12 @@ def compare_IBI(s1, s2):
     start = Line(
         y=[min(comp), max(comp)],
         x=s1.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
-        col='b',
+        item_color='b',
     )
     stop = Line(
         y=[min(comp), max(comp)],
         x=s1.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
-        col='b',
+        item_color='b',
     )
     t = MultiPlot(l, start, stop)
     addToCurrentFigSet(t)
@@ -51,7 +49,7 @@ def main(s):
     ]
     return ar
 if __name__ == '__main__':
-    HEP_DATA_FOLDER.presync()
+    # HEP_DATA_FOLDER.presync()
     mains = tuple([main(s) for s in SUBJECTS])
     mains = np.vstack(mains)
 
@@ -68,7 +66,8 @@ if __name__ == '__main__':
 
 
     makefig(figs,plotarg = PLOT)
-    if SAVE and any([s.savepeaks() for s in SUBJECTS]):
-        HEP_DATA_FOLDER.postsync()
+    # if SAVE and any([s.savepeaks() for s in SUBJECTS]):
+        # HEP_DATA_FOLDER.postsync()
     import os
-    os._exit()
+    log('HEP code finished without error. Exiting')
+    os._exit(0)

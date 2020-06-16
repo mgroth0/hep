@@ -1,7 +1,11 @@
-from PeakDetectionAlg import HEPLAB_Alg,ManualPeakDetection
+from numpy import double, diff
+import numpy as np
 
-from FigData import Line, Scat, addToCurrentFigSet, MultiPlot
-from defaults import *
+from mlib.boot.mlog import log
+from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr,nopl
+from qrsalg.PeakDetectionAlg import HEPLAB_Alg,ManualPeakDetection
+
+from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
 class MNE_Set_Wrapper:
     def __init__(self, mne_set):
         self.mne_set = mne_set
@@ -16,9 +20,19 @@ class MNE_Set_Wrapper:
     def __getitem__(self, item):
         data, times = self.mne_set[item[0], item[1]]
         return double(data).flatten()
+
+
+
+
 def HEP_Data(filename):
     return HEP_DATA_FOLDER.resolve(filename)
-HEP_DATA_FOLDER = SyncedDataFolder('HEP/data', '/home/matt/data/HEP')
+
+# HEP_DATA_FOLDER = SyncedDataFolder('_data', '/home/matt/data/HEP')
+HEP_DATA_FOLDER = File('_data')
+
+
+
+
 
 class HEP_Subject:
     def __init__(self, sub_id, dataset, alg):
@@ -136,7 +150,7 @@ class HEP_Subject:
         s = Scat(
             y=self.preprocess()[self.rpeak_get()],
             x=self.samplesToMins(self.rpeak_get()),
-            col='b',
+            item_color='b',
             xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
 
             title=self.alg.name() + ': example R peaks',
@@ -149,7 +163,7 @@ class HEP_Subject:
                 xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
                 xlabel='time (mins)',
                 ylim='auto',
-                col='g',
+                item_color='g',
                 add=False)
             plots = tuple(list(plots) + [l2])
         t = MultiPlot(*plots)
@@ -197,12 +211,12 @@ class HEP_Subject:
         start = Line(
             y=[min(ibi), max(ibi)],
             x=self.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
-            col='b',
+            item_color='b',
         )
         stop = Line(
             y=[min(ibi), max(ibi)],
             x=self.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
-            col='b',
+            item_color='b',
         )
         t = MultiPlot(l, start, stop)
         addToCurrentFigSet(t)
