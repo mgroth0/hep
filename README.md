@@ -1,6 +1,8 @@
 Installation
 -
 
+1. `git clone --recurse-submodules https://github.com/mgroth0/hep`
+
 1. install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 
 2. `conda update conda`
