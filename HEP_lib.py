@@ -2,8 +2,8 @@ from numpy import double, diff
 import numpy as np
 
 from mlib.boot.mlog import log
-from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl
-from qrsalg.HEPLAB_Alg import HEPLAB_Alg
+from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl, nopl_high
+from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
 from qrsalg import ManualPeakDetection
 
 from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
@@ -56,7 +56,8 @@ class HEP_Subject:
         self.ecg = None
         self.Fs = None
         self.ecg_flt = None
-        self.ecg_nopl = None
+        self.ecg_raw_nopl = None
+        self.ecg_raw_nopl_high = None
         self.rPeaks = None
     def get_Fs(self):
         if self.Fs is None:
@@ -71,7 +72,6 @@ class HEP_Subject:
         # else:
 
         self.rPeaks = self.peakfile[self.alg.name()]['py'][0][0].flatten()
-
 
         self.rPeaks = self.rPeaks[self.rPeaks >= self.rawslice.start]
         self.rPeaks = self.rPeaks[self.rPeaks < self.rawslice.stop]
@@ -119,20 +119,27 @@ class HEP_Subject:
             self[self.rawslice]
         self.ecg_flt = self.alg.preprocess(self.ecg, self.raw.Fs)
         return self.ecg_flt
+    def nopl_high(self):
+        if self.ecg is None:
+            # noinspection PyStatementEffect
+            self[self.rawslice]
+        self.ecg_raw_nopl_high = nopl_high(self.ecg, self.Fs)
+        return self.ecg_raw_nopl_high
     def nopl(self):
         if self.ecg is None:
             # noinspection PyStatementEffect
             self[self.rawslice]
-        self.ecg_nopl = nopl(self.ecg, self.Fs)
-        return self.ecg_nopl
+        self.ecg_raw_nopl = nopl(self.ecg, self.Fs)
+        return self.ecg_raw_nopl
     def rpeak_detect(self):
-
         # ugly coding, but its needed for Manual
         self.alg.rawslice = self.rawslice
 
         if self.ecg_flt is None:
             self.preprocess()
-        self.rPeaks = arr(self.alg.rpeak_detect(self.ecg, self.Fs, self.ecg_flt))
+        if self.ecg_raw_nopl_high is None:
+            self.nopl_high()
+        self.rPeaks = arr(self.alg.rpeak_detect(self.ecg, self.Fs, self.ecg_flt, self.ecg_raw_nopl_high))
         return self.rPeaks
     def rpeak_get(self):
         if self.rPeaks is None:
@@ -165,9 +172,11 @@ class HEP_Subject:
             title=self.alg.name() + ': example R peaks',
             add=False)
         plots = (l, s)
-        if isinstsafe(self.alg, HEPLAB_Alg):
+        if self.ecg_raw_nopl is None:
+            self.nopl()
+        if isinstsafe(self.alg, ECGLAB_QRS_Mod):
             l2 = Line(
-                y=self.alg.ecg_flt2,
+                y=self.ecg_raw_nopl,
                 x=self.times() / 60.0,
                 xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
                 xlabel='time (mins)',
@@ -266,12 +275,10 @@ class HEP_Subject:
 
     def plots(self):
         # diff the qrs of each
-        ar = np.ndarray(shape=(2, 1), dtype=MultiPlot)
-        ar[:, :] = [
-            [self.plot_example_rpeaks()],
-            [self.plot_IBIs()]
+        return [
+            self.plot_example_rpeaks(),
+            self.plot_IBIs()
         ]
-        return ar
 
 def compare_IBI(s1, s2):
     import HEP_Params

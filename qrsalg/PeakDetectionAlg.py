@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
 from numpy import inf
-from scipy.signal import filtfilt, butter
 from matplotlib import pyplot as plt
+
 from mlib.boot.mlog import log
-from mlib.boot.mutil import logverb, composed, bandstop, flat, itr, assert_int, mymax, num2str, strcmp, disp
+from mlib.boot.mutil import logverb, composed, flat, itr, assert_int, mymax, num2str, strcmp, disp
 
 
 class PeakDetectionAlg(ABC):
@@ -17,44 +17,27 @@ class PeakDetectionAlg(ABC):
 
     @classmethod
     @abstractmethod
-    def versions(cls):
-        pass
+    def versions(cls): pass
 
     @composed(abstractmethod, logverb)
-    def preprocess(self, ecg, Fs):
-        pass
+    def preprocess(self, ecg, Fs): pass
 
     @composed(abstractmethod, logverb)
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
-        pass
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high): pass
 
     def name(self):
-        return self.abr() + '_' + str(self.version).replace('.', '_')
-
-    @staticmethod
-    def standardPP(ecg, Fs):
-        log('filter')
-        [B, A] = butter(4, 1 / (Fs / 2), 'high')  # cf = 1 Hz
-        ecg_flt2 = filtfilt(B, A, ecg)
-
-        # ecg_flt2 = ecg_flt2
-
-        ecg_flt2 = bandstop(ecg_flt2, 59, 61, Fs, 1)
-
-        #         just for plot visibility
-        ecg_flt2 = (20 * ecg_flt2) + 0.01
-        return ecg_flt2
+        return f"{self.abr()}_{str(self.version).replace('.', '_')}"
 
     @classmethod
     def abr(cls):
         from qrsalg import pan_tompkins
-        from qrsalg import ecglab_fast
+        from qrsalg import ECGLAB_Original
         from qrsalg import ecglab_slow
         from qrsalg import ManualPeakDetection
         # noinspection PyTypeChecker
         return {
             pan_tompkins       : 'pan',
-            ecglab_fast        : 'fast',
+            ECGLAB_Original    : 'fast',
             ecglab_slow        : 'slow',
             ManualPeakDetection: 'manual'
         }[cls]
@@ -100,4 +83,3 @@ class PeakDetectionAlg(ABC):
                 else:
                     disp('skipping')
         return newlats
-

@@ -1,4 +1,4 @@
-from mlib.boot.mutil import File, arr, ints, vers
+from mlib.boot.mutil import File, arr, ints, vers, nopl, nopl_high
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 class ManualPeakDetection(PeakDetectionAlg):
     @classmethod
@@ -8,8 +8,8 @@ class ManualPeakDetection(PeakDetectionAlg):
     }
     MANUAL_INPUT_FILE = File('_data/EP1163_10min_ManInput.mat')
     def preprocess(self, ecg, Fs):
-        return self.standardPP(ecg, Fs)
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
+        return nopl_high(ecg,Fs )
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
         # just fixpeaks
         qrs = arr(self.MANUAL_INPUT_FILE['heartbeatevents']['py'][0]).flatten()[0].flatten()
         qrs = ints(qrs)

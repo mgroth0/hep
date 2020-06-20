@@ -68,7 +68,7 @@ class pan_tompkins(PeakDetectionAlg):
 
         return integrated_ecg_measurements
 
-    def rpeak_detect(self, ecg_raw, Fs,ecg_flt):
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
         log('Run whole detector flow.')
         log('Fiducial mark - peak detection on integrated measurements.')
         self.detected_peaks_indices = self.findpeaks(data=ecg_flt,

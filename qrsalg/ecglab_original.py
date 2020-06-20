@@ -1,7 +1,8 @@
 from mlib.boot.mutil import arr, Progress, mymax, vers, log_invokation, log
-from qrsalg.HEPLAB_Alg import HEPLAB_Alg
+from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
 
-class ecglab_fast(HEPLAB_Alg):
+# TODO: "original" is the goal, but currently its just HEPLAB_fast
+class ECGLAB_Original(ECGLAB_QRS_Mod):
     @classmethod
     def versions(cls):
         return {
@@ -17,7 +18,7 @@ class ecglab_fast(HEPLAB_Alg):
         }
 
     @log_invokation()
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
         log('start fast algorithm')
         # area to look for r events
         area = round(0.070 * Fs)
@@ -90,9 +91,6 @@ class ecglab_fast(HEPLAB_Alg):
         # n = 1
         mark_count = len(Rwave)
 
-        # DEBUG
-        # self.ecg_flt2 = bandstop(ecg_raw, 59, 61, Fs, 1)
-
         log('return to signal')
         Rwave = arr(Rwave) - ret
         # breakpoint()
@@ -109,9 +107,9 @@ class ecglab_fast(HEPLAB_Alg):
 
                 MINUS_AREA = min(8, Rwave[i])  # area
                 if sz >= (Rwave[i] + area) + 1:
-                    _, mark = mymax(abs(self.ecg_flt2[Rwave[i] - MINUS_AREA:Rwave[i] + area]))
+                    _, mark = mymax(abs(ecg_raw_nopl_high[Rwave[i] - MINUS_AREA:Rwave[i] + area]))
                 else:
-                    _, mark = mymax(abs(self.ecg_flt2[Rwave[i] - MINUS_AREA:sz]))
+                    _, mark = mymax(abs(ecg_raw_nopl_high[Rwave[i] - MINUS_AREA:sz]))
                     # if self.version < 3:
                     #     flag = False
                     # else:
@@ -120,15 +118,6 @@ class ecglab_fast(HEPLAB_Alg):
 
                 # calculate and save mark
                 mark = mark + Rwave[i]  # -1
-
-                # DEBUG
-                # if (mark / 2000.0) > (9.3175 * 60):
-                # peak 246(pyi=245)
-                #     self.ecg_flt2[mark]
-
-                # WHY (DEBUG)
-                # mark = mark - 100
-
 
                 qrs.append(mark)
 

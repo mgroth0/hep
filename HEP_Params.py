@@ -11,10 +11,9 @@ SUBJECTS = [
             # 'FULL'
         ][0], [
             (ManualPeakDetection, inf, 'CALC'),
-            (ecglab_fast, inf, 'CALC'),
+            (ECGLAB_Original, inf, 'CALC'),
             # (ecglab_fast, inf, 'CALC'),
             # (ecglab_slow, inf, 'CALC'),
-            # JustPreprocess
             # (pan_tompkins, inf, 'CALC'),
 
         ][x]
@@ -26,7 +25,5 @@ RAND_SLICE = slice(2 * SUBJECTS[0].get_Fs(), 8 * SUBJECTS[0].get_Fs())
 # this was used for full
 # RAND_SLICE = slice(555 * SUBJECTS[0].get_Fs(), 562 * SUBJECTS[0].get_Fs())
 
-PLOT = ''.join([
-    'IMAGE',
-    # 'GUI'
-])
+PLOT_FILE = '_plot.png'
+# PLOT_FILE = None #GUI

@@ -1,15 +1,15 @@
 from numpy import fix, mean, ones
 
 from mlib.boot.mlog import log
-from qrsalg.HEPLAB_Alg import HEPLAB_Alg
+from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
 from mlib.boot.mutil import arr, Progress, mymax, bandstop
 
-class ecglab_slow(HEPLAB_Alg):
+class ecglab_slow(ECGLAB_QRS_Mod):
     @classmethod
     def versions(cls): return {
         '1': 'init'
     }
-    def rpeak_detect(self, ecg_raw,Fs,ecg_flt):
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
         ecg = self.ecg_raw  # only needed for ecglab_slow
 
         log('R wave detection in progress... Please wait...')
