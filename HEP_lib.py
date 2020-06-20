@@ -3,7 +3,7 @@ import numpy as np
 
 from mlib.boot.mlog import log
 from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl
-from qrsalg.PeakDetectionAlg import HEPLAB_Alg
+from qrsalg.HEPLAB_Alg import HEPLAB_Alg
 from qrsalg import ManualPeakDetection
 
 from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot

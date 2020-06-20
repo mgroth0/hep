@@ -1,7 +1,7 @@
 from numpy import fix, mean, ones
 
 from mlib.boot.mlog import log
-from qrsalg.PeakDetectionAlg import HEPLAB_Alg
+from qrsalg.HEPLAB_Alg import HEPLAB_Alg
 from mlib.boot.mutil import arr, Progress, mymax, bandstop
 
 class ecglab_slow(HEPLAB_Alg):

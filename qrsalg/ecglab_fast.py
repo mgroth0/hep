@@ -1,6 +1,5 @@
-from mlib.boot.mlog import log
-from qrsalg.PeakDetectionAlg import HEPLAB_Alg
-from mlib.boot.mutil import arr, Progress, mymax, vers
+from mlib.boot.mutil import arr, Progress, mymax, vers, log_invokation, log
+from qrsalg.HEPLAB_Alg import HEPLAB_Alg
 
 class ecglab_fast(HEPLAB_Alg):
     @classmethod
@@ -15,15 +14,10 @@ class ecglab_fast(HEPLAB_Alg):
             '4.0': 'safe_lmt adjustment',
             '4.1': 'remove 1 sec trimming',
             '4.2': 'remove heartbeat1 index check'
-            # ,
-            # 3: 'dif_thresh'
-            # 2.3: 'adjust plflt for flt2'
-            # 'fixPeaks'
-            # 'findpeaks of plfilt instead'
         }
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
-        log('R wave detection in progress... Please wait...')
 
+    @log_invokation()
+    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
         log('start fast algorithm')
         # area to look for r events
         area = round(0.070 * Fs)
@@ -57,7 +51,7 @@ class ecglab_fast(HEPLAB_Alg):
 
         log('repeat for every cardiac cycle')
 
-        with Progress(sz) as prog:
+        with Progress(sz, 'scanning', 'samples') as prog:
             while n + 1 < sz:
                 if vers(self.version) >= vers(2.1):
                     comp_area = ecg_flt[max(0, n - comp):min(n + comp, sz)]
@@ -75,7 +69,7 @@ class ecglab_fast(HEPLAB_Alg):
                     if lmt > 1.5 * safe_lmt and safe_lmt != 0.0:
                         # log(f'caught an art?n={n}/{sz}')
                         lmt = safe_lmt
-                        if self.version >= 4:
+                        if vers(self.version) >= vers(4):
                             safe_lmt = safe_lmt * 1.001
                     else:
                         safe_lmt = lmt
@@ -106,8 +100,9 @@ class ecglab_fast(HEPLAB_Alg):
         # if Rwave[0] < 1: Rwave[0] = 1
 
         log('locate R peaks')
-        with Progress(mark_count - 2) as prog:
-            for i in range(0, mark_count):
+        # TODO: Should merge with fixPeaks()
+        with Progress(mark_count, 'searching back on', 'marks') as prog:
+            for i in range(mark_count):
                 # flag = True
 
                 # while flag:
@@ -142,9 +137,4 @@ class ecglab_fast(HEPLAB_Alg):
         assert list(Rwave)
         if not list(Rwave):
             qrs = -1
-
-        # if self.version >= 1.1:
-        #     qrs = self.fixpeaks(qrs, self.ecg_flt2, AUTO=True)
-
-        log('returning qrs')
         return qrs
