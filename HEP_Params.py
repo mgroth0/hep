@@ -1,5 +1,8 @@
 from HEP_lib import HEP_Subject
 from numpy import inf
+
+from mlib.boot.mutil import Folder
+from mlib.web.makereport_lib import DOCS_FOLDER
 from qrsalg import *
 from qrsalg import ManualPeakDetection
 SUBJECTS = [
@@ -25,6 +28,6 @@ RAND_SLICE = slice(2 * SUBJECTS[0].get_Fs(), 8 * SUBJECTS[0].get_Fs())
 # this was used for full
 # RAND_SLICE = slice(555 * SUBJECTS[0].get_Fs(), 562 * SUBJECTS[0].get_Fs())
 
-figs_folder = '_figs'
-PLOT_FILE = f'{figs_folder}/_plot.png'
+_FIGS_FOLDER = Folder(DOCS_FOLDER.mkdir()['resources/figs']).mkdirs()
+PLOT_FILE = _FIGS_FOLDER['plot.png']
 # PLOT_FILE = None #GUI

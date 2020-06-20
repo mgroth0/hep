@@ -1,0 +1,32 @@
+
+body {
+    background:black;
+    color: white;
+}
+ .center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  text-align: center;
+}
+.pixel {
+    image-rendering: optimizeSpeed;             /* Older versions of FF */
+    image-rendering: -moz-crisp-edges;          /* FF 6.0+ */
+    image-rendering: -webkit-optimize-contrast; /* Webkit (non standard naming) */
+    image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+    image-rendering: crisp-edges;               /* Possible future browsers. */
+    -ms-interpolation-mode: nearest-neighbor;   /* IE (non standard naming) */
+}
+.textcell {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+.parentcell {
+position:relative;
+width:100%;
+}
