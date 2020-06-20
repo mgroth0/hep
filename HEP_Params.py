@@ -25,5 +25,6 @@ RAND_SLICE = slice(2 * SUBJECTS[0].get_Fs(), 8 * SUBJECTS[0].get_Fs())
 # this was used for full
 # RAND_SLICE = slice(555 * SUBJECTS[0].get_Fs(), 562 * SUBJECTS[0].get_Fs())
 
-PLOT_FILE = '_plot.png'
+figs_folder = '_figs'
+PLOT_FILE = f'{figs_folder}/_plot.png'
 # PLOT_FILE = None #GUI
