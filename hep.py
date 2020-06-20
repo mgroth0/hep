@@ -7,10 +7,11 @@ from mlib.wolf.wolfpy import WOLFRAM
 figs = [[plot] for s in SUBJECTS for plot in s.plots()]
 figs += [[compare_IBI(SUBJECTS[0], SUBJECTS[1])]]
 makefig(figs, file=PLOT_FILE, show=False)
+DOCS_ROOT = 'https://mgroth0.github.io/hep/'
 with WOLFRAM:
     prep_gitlfs_webpage(
         HTML(
-            HTMLImage(RESOURCES_ROOT + 'hep/_plot.png')
+            HTMLImage(f'{DOCS_ROOT}resources/figs/plot.png')
         ),
     )
 if SAVE: [s.savepeaks() for s in SUBJECTS]
