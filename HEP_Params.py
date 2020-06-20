@@ -1,6 +1,7 @@
 from HEP_lib import HEP_Subject
 from numpy import inf
 from qrsalg import *
+from qrsalg import ManualPeakDetection
 SUBJECTS = [
     HEP_Subject(
         'EP1163',
@@ -9,7 +10,7 @@ SUBJECTS = [
             # 'TEN_MINUTE_TEST'
             # 'FULL'
         ][0], [
-            # (ManualPeakDetection, inf, 'LOAD'),
+            (ManualPeakDetection, inf, 'CALC'),
             (ecglab_fast, inf, 'CALC'),
             # (ecglab_fast, inf, 'CALC'),
             # (ecglab_slow, inf, 'CALC'),
@@ -17,8 +18,8 @@ SUBJECTS = [
             # (pan_tompkins, inf, 'CALC'),
 
         ][x]
-    ) for x in range(1)]
-SAVE = True
+    ) for x in range(2)]
+SAVE = False
 
 RAND_SLICE = slice(2 * SUBJECTS[0].get_Fs(), 8 * SUBJECTS[0].get_Fs())
 

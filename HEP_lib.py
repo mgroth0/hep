@@ -3,7 +3,8 @@ import numpy as np
 
 from mlib.boot.mlog import log
 from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl
-from qrsalg.PeakDetectionAlg import HEPLAB_Alg, ManualPeakDetection
+from qrsalg.PeakDetectionAlg import HEPLAB_Alg
+from qrsalg import ManualPeakDetection
 
 from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
 class MNE_Set_Wrapper:
@@ -42,7 +43,7 @@ class HEP_Subject:
         self.algmode = alg[2]
         self.peakfile = HEP_Data(
             {
-                'TEN_SECOND_PILOT': sub_id + '_10min_qrs',
+                'TEN_SECOND_PILOT': sub_id + '_10sec_qrs',
                 'TEN_MINUTE_TEST' : sub_id + '_10min_qrs',
                 'FULL'            : sub_id + '_qrs'
             }[dataset] + '.mat')
@@ -71,12 +72,16 @@ class HEP_Subject:
 
         self.rPeaks = self.peakfile[self.alg.name()]['py'][0][0].flatten()
 
+
+        self.rPeaks = self.rPeaks[self.rPeaks >= self.rawslice.start]
+        self.rPeaks = self.rPeaks[self.rPeaks < self.rawslice.stop]
+
         # TEMP, removing first and last of manual to match others
         # self.rPeaks =self.rPeaks[1:-1]
 
 
         assert len(self.rPeaks.shape) == 1
-        assert len(self.rPeaks) > 100
+        assert len(self.rPeaks) > 2
         # if self.alg.__class__.__name__ == 'ManualPeakDetection' and self.alg.version >= 1.1:
         #     self.preprocess()
         #     self.rPeaks = self.alg.fixpeaks(self.rPeaks,self.ecg_flt,AUTO=True)
@@ -121,6 +126,10 @@ class HEP_Subject:
         self.ecg_nopl = nopl(self.ecg, self.Fs)
         return self.ecg_nopl
     def rpeak_detect(self):
+
+        # ugly coding, but its needed for Manual
+        self.alg.rawslice = self.rawslice
+
         if self.ecg_flt is None:
             self.preprocess()
         self.rPeaks = arr(self.alg.rpeak_detect(self.ecg, self.Fs, self.ecg_flt))
@@ -254,3 +263,42 @@ class HEP_Subject:
         }
         self.peakfile['heartbeatevents'] = export
         return True
+
+    def plots(self):
+        # diff the qrs of each
+        ar = np.ndarray(shape=(2, 1), dtype=MultiPlot)
+        ar[:, :] = [
+            [self.plot_example_rpeaks()],
+            [self.plot_IBIs()]
+        ]
+        return ar
+
+def compare_IBI(s1, s2):
+    import HEP_Params
+    comp = s1.samplesToMs(s2.rpeak_get() - s1.rpeak_get())
+    times = s1.times(s1.rPeaks) / 60.0
+    mistakes = arr(comp)[comp != 0]
+    mistakeTs = arr(times)[comp != 0]
+    for c, t in zip(mistakes, mistakeTs):
+        log(f'found a possible mis-detect of {c} at {t}')
+    log(f'{len(mistakes)=}')
+    l = Line(
+        y=comp,
+        x=times,
+        ylabel='change (ms)',
+        title=f'{s1.alg.name()} -> {s2.alg.name()}',
+        add=False
+    )
+    start = Line(
+        y=[min(comp), max(comp)],
+        x=s1.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
+        item_color='b',
+    )
+    stop = Line(
+        y=[min(comp), max(comp)],
+        x=s1.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
+        item_color='b',
+    )
+    t = MultiPlot(l, start, stop)
+    addToCurrentFigSet(t)
+    return t

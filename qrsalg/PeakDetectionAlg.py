@@ -5,7 +5,8 @@ from numpy import ones, inf
 from scipy.signal import bilinear, filtfilt, lfilter, butter
 from matplotlib import pyplot as plt
 from mlib.boot.mlog import log
-from mlib.boot.mutil import logverb, composed, File, bandstop, flat, itr, assert_int, mymax, num2str, strcmp, disp, arr
+from mlib.boot.mutil import logverb, composed, bandstop, flat, itr, assert_int, mymax, num2str, strcmp, disp
+
 
 class PeakDetectionAlg(ABC):
     def __init__(self, version=inf):
@@ -49,6 +50,7 @@ class PeakDetectionAlg(ABC):
         from qrsalg import pan_tompkins
         from qrsalg import ecglab_fast
         from qrsalg import ecglab_slow
+        from qrsalg import ManualPeakDetection
         # noinspection PyTypeChecker
         return {
             pan_tompkins       : 'pan',
@@ -132,17 +134,3 @@ class JustPreprocess(HEPLAB_Alg):
     def versions(cls): return {1: 'init'}
     def rpeak_detect(self, ecg_raw, fs, ecg_flt): return -1
 
-class ManualPeakDetection(PeakDetectionAlg):
-    @classmethod
-    def versions(cls): return {
-        1  : 'init',
-        1.1: 'fixPeaks'
-    }
-    MANUAL_FILE = File('_data/EP1163_10min_qrs_manual.mat')
-    def preprocess(self, ecg, Fs):
-        return self.standardPP(ecg, Fs)
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt):
-        qrs = arr(self.MANUAL_FILE['heartbeatevents']['py'][0][0]).flatten()
-        if self.version >= 1:
-            qrs = self.fixpeaks(qrs, ecg_flt, AUTO=True)
-        return qrs
