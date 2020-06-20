@@ -1,14 +1,9 @@
-from mlib.FigData import makefig, Line, MultiPlot, addToCurrentFigSet
-import sys
-import HEP_lib
-from mlib.boot.mutil import arr
-from mlib.boot.mlog import log
+# import HEP_Main
+
+from mlib.FigData import makefig
 from HEP_lib import *
 import HEP_Params
 from HEP_Params import *
-# import HEP_Main
-from qrsalg import *
-import numpy as np
 
 
 def compare_IBI(s1, s2):

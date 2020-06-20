@@ -2,8 +2,8 @@ from numpy import double, diff
 import numpy as np
 
 from mlib.boot.mlog import log
-from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr,nopl
-from qrsalg.PeakDetectionAlg import HEPLAB_Alg,ManualPeakDetection
+from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl
+from qrsalg.PeakDetectionAlg import HEPLAB_Alg, ManualPeakDetection
 
 from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
 class MNE_Set_Wrapper:
@@ -42,7 +42,7 @@ class HEP_Subject:
         self.algmode = alg[2]
         self.peakfile = HEP_Data(
             {
-                'TEN_SECOND_PILOT': None,
+                'TEN_SECOND_PILOT': sub_id + '_10min_qrs',
                 'TEN_MINUTE_TEST' : sub_id + '_10min_qrs',
                 'FULL'            : sub_id + '_qrs'
             }[dataset] + '.mat')
@@ -62,7 +62,6 @@ class HEP_Subject:
             self.load()
         return self.Fs
     def loadpeaks(self):
-
         # temp
         # self.peakfile = HEP_Data(self.peakfile.name.replace('.mat','_manual.mat'))
 
@@ -99,6 +98,7 @@ class HEP_Subject:
     def times(self, indices=None):
         if indices is None: indices = self.rawslice
         if not isinstance(indices, slice):
+            if len(indices) == 0: return arr()
             t = self.load().times(slice(
                 min(indices),
                 max(indices) + 1))
@@ -209,12 +209,12 @@ class HEP_Subject:
             add=False
         )
         start = Line(
-            y=[min(ibi), max(ibi)],
+            y=[min(ibi, default=0), max(ibi, default=1)],
             x=self.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
             item_color='b',
         )
         stop = Line(
-            y=[min(ibi), max(ibi)],
+            y=[min(ibi, default=0), max(ibi, default=1)],
             x=self.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
             item_color='b',
         )
@@ -226,7 +226,7 @@ class HEP_Subject:
     def savepeaks(self):
         if self.algmode == 'LOAD':
             log('skipping savepeaks for ' + str(self) + ' because data was loaded from file')
-        #
+            #
             return False
 
         if self.rPeaks is None:

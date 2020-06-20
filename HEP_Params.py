@@ -5,8 +5,8 @@ SUBJECTS = [
     HEP_Subject(
         'EP1163',
         [
-            # 'TEN_SECOND_PILOT'
-            'TEN_MINUTE_TEST'
+            'TEN_SECOND_PILOT'
+            # 'TEN_MINUTE_TEST'
             # 'FULL'
         ][0], [
             # (ManualPeakDetection, inf, 'LOAD'),
