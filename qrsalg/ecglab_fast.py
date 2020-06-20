@@ -1,18 +1,20 @@
 from mlib.boot.mlog import log
 from qrsalg.PeakDetectionAlg import HEPLAB_Alg
-from mlib.boot.mutil import arr, Progress, mymax
+from mlib.boot.mutil import arr, Progress, mymax, vers
 
 class ecglab_fast(HEPLAB_Alg):
     @classmethod
     def versions(cls):
         return {
-            1  : 'init',
-            2.0: 'artifact catching',
-            2.1: 'lookBack',
-            2.2: 'plfilt flt2',
-            3.0: 'SQUID accepter',
-            3.1: 'area adjustment',
-            4.0: 'safe_lmt adjustment'
+            '1'  : 'init',
+            '2.0': 'artifact catching',
+            '2.1': 'lookBack',
+            '2.2': 'plfilt flt2',
+            '3.0': 'SQUID accepter',
+            '3.1': 'area adjustment',
+            '4.0': 'safe_lmt adjustment',
+            '4.1': 'remove 1 sec trimming',
+            '4.2': 'remove heartbeat1 index check'
             # ,
             # 3: 'dif_thresh'
             # 2.3: 'adjust plflt for flt2'
@@ -57,7 +59,7 @@ class ecglab_fast(HEPLAB_Alg):
 
         with Progress(sz) as prog:
             while n + 1 < sz:
-                if self.version >= 2.1:
+                if vers(self.version) >= vers(2.1):
                     comp_area = ecg_flt[max(0, n - comp):min(n + comp, sz)]
                     local_comp_area = ecg_flt[max(0, n - local_comp):min(n + local_comp, sz)]
                 else:
@@ -69,7 +71,7 @@ class ecglab_fast(HEPLAB_Alg):
                 lmt = gain * max(abs(comp_area))
                 local_lmt = gain * max(abs(local_comp_area))
 
-                if self.version >= 2.0:
+                if vers(self.version) >= vers(2.0):
                     if lmt > 1.5 * safe_lmt and safe_lmt != 0.0:
                         # log(f'caught an art?n={n}/{sz}')
                         lmt = safe_lmt
@@ -99,17 +101,18 @@ class ecglab_fast(HEPLAB_Alg):
 
         log('return to signal')
         Rwave = arr(Rwave) - ret
-        if Rwave[0] < 1: Rwave[0] = 1
+        # breakpoint()
+        # assert Rwave[0] >= 1
+        # if Rwave[0] < 1: Rwave[0] = 1
 
         log('locate R peaks')
         with Progress(mark_count - 2) as prog:
-            for i in range(1, mark_count - 1):
+            for i in range(0, mark_count):
                 # flag = True
 
                 # while flag:
 
-                MINUS_AREA = 8  # area
-
+                MINUS_AREA = min(8, Rwave[i])  # area
                 if sz >= (Rwave[i] + area) + 1:
                     _, mark = mymax(abs(self.ecg_flt2[Rwave[i] - MINUS_AREA:Rwave[i] + area]))
                 else:
@@ -136,6 +139,7 @@ class ecglab_fast(HEPLAB_Alg):
 
                 prog.tick()
 
+        assert list(Rwave)
         if not list(Rwave):
             qrs = -1
 

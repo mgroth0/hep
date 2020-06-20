@@ -5,7 +5,9 @@
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 
 class pan_tompkins(PeakDetectionAlg):
-    def versions(cls): return {1: 'init'}
+    def versions(cls): return {
+        '1': 'init'
+    }
 
 
     # Configuration parameters.

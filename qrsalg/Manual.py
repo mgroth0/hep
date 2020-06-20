@@ -1,10 +1,10 @@
-from mlib.boot.mutil import File, arr, ints
+from mlib.boot.mutil import File, arr, ints, vers
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 class ManualPeakDetection(PeakDetectionAlg):
     @classmethod
     def versions(cls): return {
-        1  : 'init',
-        1.1: 'fixPeaks'
+        '1'  : 'init',
+        '1.1': 'fixPeaks'
     }
     MANUAL_INPUT_FILE = File('_data/EP1163_10min_ManInput.mat')
     def preprocess(self, ecg, Fs):
@@ -15,6 +15,6 @@ class ManualPeakDetection(PeakDetectionAlg):
         qrs = ints(qrs)
         qrs = qrs[qrs >= self.rawslice.start]
         qrs = qrs[qrs < self.rawslice.stop]
-        if self.version >= 1:
+        if vers(self.version) >= vers(1):
             qrs = self.fixpeaks(qrs, ecg_flt, AUTO=True)
         return qrs

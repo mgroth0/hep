@@ -12,7 +12,8 @@ class PeakDetectionAlg(ABC):
     def __init__(self, version=inf):
         log('creating Algorithm: $$', self, version)
         if version == inf:
-            version = max(self.versions().keys())
+            from packaging import version
+            version = max(self.versions().keys(), key=lambda k: version.parse(k))
         self.version = version
 
     @classmethod
@@ -131,6 +132,5 @@ class HEPLAB_Alg(PeakDetectionAlg, ABC):
 
 class JustPreprocess(HEPLAB_Alg):
     @classmethod
-    def versions(cls): return {1: 'init'}
+    def versions(cls): return {'1': 'init'}
     def rpeak_detect(self, ecg_raw, fs, ecg_flt): return -1
-

@@ -6,7 +6,9 @@ from mlib.boot.mutil import arr, Progress, mymax, bandstop
 
 class ecglab_slow(HEPLAB_Alg):
     @classmethod
-    def versions(cls): return {1: 'init'}
+    def versions(cls): return {
+        '1': 'init'
+    }
     def rpeak_detect(self, ecg_raw,Fs,ecg_flt):
         ecg = self.ecg_raw  # only needed for ecglab_slow
 
