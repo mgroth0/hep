@@ -1,5 +1,6 @@
 # import HEP_Main
-
+import matplotlib
+matplotlib.use('PS')  # prevents matplotlib 'app' from opening
 from mlib.FigData import makefig
 from HEP_lib import *
 import HEP_Params
@@ -9,9 +10,9 @@ from HEP_Params import *
 def compare_IBI(s1, s2):
     comp = s1.samplesToMs(s2.rpeak_get() - s1.rpeak_get())
     times = s1.times(s1.rPeaks) / 60.0
-    mistakes = arr(comp)[comp!=0]
-    mistakeTs = arr(times)[comp!=0]
-    for c,t in zip(mistakes,mistakeTs):
+    mistakes = arr(comp)[comp != 0]
+    mistakeTs = arr(times)[comp != 0]
+    for c, t in zip(mistakes, mistakeTs):
         log(f'found a possible mis-detect of {c} at {t}')
     log(f'mistake count: {len(mistakes)}')
     l = Line(
@@ -48,9 +49,7 @@ if __name__ == '__main__':
     mains = tuple([main(s) for s in SUBJECTS])
     mains = np.vstack(mains)
 
-
     figs = mains
-
 
     # ar = np.ndarray(shape=(1, 1), dtype=MultiPlot)
     # comp = [[compare_IBI(SUBJECTS[0], SUBJECTS[1])]]
@@ -59,10 +58,9 @@ if __name__ == '__main__':
     # figs = tuple(figs)
     # figs = np.vstack(figs)
 
-
-    makefig(figs,plotarg = PLOT)
+    makefig(figs, plotarg=PLOT)
     # if SAVE and any([s.savepeaks() for s in SUBJECTS]):
-        # HEP_DATA_FOLDER.postsync()
+    # HEP_DATA_FOLDER.postsync()
     import os
     log('HEP code finished without error. Exiting')
     os._exit(0)

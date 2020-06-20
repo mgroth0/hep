@@ -132,9 +132,9 @@ class HEP_Subject:
             else:
                 self.rpeak_detect()
 
-        self.rPeaks = arr(self.rPeaks)[
-            np.bitwise_and(self.rPeaks >= 10 * self.Fs, self.rPeaks < len(self.times()) - 10 * self.Fs)]
-
+        # self.rPeaks = arr(self.rPeaks)[
+        #     np.bitwise_and(self.rPeaks >= 10 * self.Fs, self.rPeaks < len(self.times()) - 10 * self.Fs)]
+        #
         return self.rPeaks
 
     def plot_example_rpeaks(self):
