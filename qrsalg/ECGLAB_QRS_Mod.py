@@ -5,12 +5,16 @@ from numpy import ones
 from scipy.signal import bilinear, filtfilt, lfilter, butter
 
 from mlib.boot.mutil import log_invokation
+from mlib.web.web import Shadow
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
+
+DOC = Shadow()
 
 # SOURCE: https://u.nu/qy-4k
 class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
     @log_invokation()
     def preprocess(self, ecg, Fs):
+        DOC.children += ["Hello World!"]
         #################
         # Bandpass Filter
         #################
