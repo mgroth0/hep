@@ -1,11 +1,10 @@
+import functools
+
 from numpy import double, diff
-import numpy as np
 
 from mlib.boot.mlog import log
-from mlib.boot.mutil import assert_int, SyncedDataFolder, arr, File, isinstsafe, itr, nopl, nopl_high
+from mlib.boot.mutil import assert_int, arr, File, isinstsafe, itr, nopl, nopl_high
 from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
-from qrsalg import ManualPeakDetection
-
 from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
 class MNE_Set_Wrapper:
     def __init__(self, mne_set):
@@ -52,134 +51,106 @@ class HEP_Subject:
             'TEN_MINUTE_TEST' : slice(0, 1200000),
             'FULL'            : slice(0, None),
         }[dataset]
-        self.raw = None
-        self.ecg = None
-        self.Fs = None
-        self.ecg_flt = None
-        self.ecg_raw_nopl = None
-        self.ecg_raw_nopl_high = None
-        self.rPeaks = None
-    def get_Fs(self):
-        if self.Fs is None:
-            self.load()
-        return self.Fs
-    def loadpeaks(self):
-        # temp
-        # self.peakfile = HEP_Data(self.peakfile.name.replace('.mat','_manual.mat'))
+    @property
+    @functools.lru_cache()
+    def raw(self):
+        raw = self.rawfile.load()
+        return raw
+    @property
+    @functools.lru_cache()
+    def Fs(self):
+        return self.raw.Fs
+    @property
+    @functools.lru_cache()
+    def ecg(self):
+        return self.raw[self.raw.ECG_CHAN, self.rawslice]
+    def _loadpeaks(self):
+        rPeaks = self.peakfile[self.alg.name()]['py'][0][0].flatten()
+        rPeaks = rPeaks[rPeaks >= self.rawslice.start]
+        rPeaks = rPeaks[rPeaks < self.rawslice.stop]
+        assert len(rPeaks.shape) == 1
+        assert len(rPeaks) > 2
+        return rPeaks
+    def _rpeak_detect(self):
+        # ugly coding, but its needed for Manual
+        self.alg.rawslice = self.rawslice
+        return arr(self.alg.rpeak_detect(self.ecg, self.Fs, self.ecg_flt, self.nopl_high))
+    @property
+    @functools.lru_cache()
+    def rPeaks(self):
+        if self.algmode == 'LOAD':
+            return self._loadpeaks()
+        else:
+            return self._rpeak_detect()
 
-        # if isinstance(self.alg,ManualPeakDetection):
-        #     self.rPeaks = self.peakfile['manual_'+str(self.alg.version)]['py'][0][0].flatten()
-        # else:
-
-        self.rPeaks = self.peakfile[self.alg.name()]['py'][0][0].flatten()
-
-        self.rPeaks = self.rPeaks[self.rPeaks >= self.rawslice.start]
-        self.rPeaks = self.rPeaks[self.rPeaks < self.rawslice.stop]
-
-        # TEMP, removing first and last of manual to match others
-        # self.rPeaks =self.rPeaks[1:-1]
-
-
-        assert len(self.rPeaks.shape) == 1
-        assert len(self.rPeaks) > 2
-        # if self.alg.__class__.__name__ == 'ManualPeakDetection' and self.alg.version >= 1.1:
-        #     self.preprocess()
-        #     self.rPeaks = self.alg.fixpeaks(self.rPeaks,self.ecg_flt,AUTO=True)
-        #
-        # # temp
-        # self.peakfile = HEP_Data(self.peakfile.name.replace('_manual.mat','.mat'))
-
-        return self.rPeaks
-    def load(self):
-        if self.raw is None:
-            self.raw = self.rawfile.load()
-            self.Fs = self.raw.Fs
-        return self.raw
-    def __getitem__(self, item):
-        if self.raw is None: self.load()
-        self.ecg = self.raw[self.raw.ECG_CHAN, item]
-        return self.ecg
-
-    def times(self, indices=None):
-        if indices is None: indices = self.rawslice
+    @property
+    @functools.lru_cache()
+    def _times(self):
+        indices = self.rawslice
         if not isinstance(indices, slice):
             if len(indices) == 0: return arr()
-            t = self.load().times(slice(
+            t = self.raw.times(slice(
                 min(indices),
                 max(indices) + 1))
             indices = arr(indices) - min(indices)
             t = t[indices]
         else:
-            t = self.load().times(indices)
+            t = self.raw.times(indices)
         return t
 
-    def preprocess(self):
-        if self.ecg is None:
-            # noinspection PyStatementEffect
-            self[self.rawslice]
-        self.ecg_flt = self.alg.preprocess(self.ecg, self.raw.Fs)
-        return self.ecg_flt
+    def times(self, indices=None):
+        if indices is None: indices = self.rawslice
+        if not isinstance(indices, slice):
+            if len(indices) == 0: return arr()
+            t = self._times[slice(
+                min(indices),
+                max(indices) + 1)]
+            indices = arr(indices) - min(indices)
+            t = t[indices]
+        else:
+            t = self._times[indices]
+        return t
+
+    @property
+    @functools.lru_cache()
+    def ecg_flt(self):
+        return self.alg.preprocess(self.ecg, self.raw.Fs)
+    @property
+    @functools.lru_cache()
     def nopl_high(self):
-        if self.ecg is None:
-            # noinspection PyStatementEffect
-            self[self.rawslice]
-        self.ecg_raw_nopl_high = nopl_high(self.ecg, self.Fs)
-        return self.ecg_raw_nopl_high
+        return nopl_high(self.ecg, self.Fs)
+    @property
+    @functools.lru_cache()
     def nopl(self):
-        if self.ecg is None:
-            # noinspection PyStatementEffect
-            self[self.rawslice]
-        self.ecg_raw_nopl = nopl(self.ecg, self.Fs)
-        return self.ecg_raw_nopl
-    def rpeak_detect(self):
-        # ugly coding, but its needed for Manual
-        self.alg.rawslice = self.rawslice
+        return nopl(self.ecg, self.Fs)
 
-        if self.ecg_flt is None:
-            self.preprocess()
-        if self.ecg_raw_nopl_high is None:
-            self.nopl_high()
-        self.rPeaks = arr(self.alg.rpeak_detect(self.ecg, self.Fs, self.ecg_flt, self.ecg_raw_nopl_high))
-        return self.rPeaks
-    def rpeak_get(self):
-        if self.rPeaks is None:
-            if self.algmode == 'LOAD':
-                self.loadpeaks()
-            else:
-                self.rpeak_detect()
-
-        # self.rPeaks = arr(self.rPeaks)[
-        #     np.bitwise_and(self.rPeaks >= 10 * self.Fs, self.rPeaks < len(self.times()) - 10 * self.Fs)]
-        #
-        return self.rPeaks
 
     def plot_example_rpeaks(self):
         import HEP_Params
+        time_mins = 'time (mins)'
         l = Line(
-            y=self.preprocess(),
+            y=self.ecg_flt,
             x=self.times() / 60.0,
             xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
-            xlabel='time (mins)',
+            xlabel=time_mins,
             ylim='auto', add=False,
             hideYTicks=True
         )
         s = Scat(
-            y=self.preprocess()[self.rpeak_get()],
-            x=self.samplesToMins(self.rpeak_get()),
+            y=self.ecg_flt[self.rPeaks],
+            x=self.samplesToMins(self.rPeaks),
             item_color='b',
             xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
 
             title=self.alg.name() + ': example R peaks',
             add=False)
         plots = (l, s)
-        if self.ecg_raw_nopl is None:
-            self.nopl()
         if isinstsafe(self.alg, ECGLAB_QRS_Mod):
             l2 = Line(
-                y=self.ecg_raw_nopl,
+                y=self.nopl,
                 x=self.times() / 60.0,
                 xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
-                xlabel='time (mins)',
+                xlabel=time_mins,
                 ylim='auto',
                 item_color='g',
                 add=False)
@@ -217,7 +188,8 @@ class HEP_Subject:
 
     def plot_IBIs(self):
         import HEP_Params
-        ibi = self.samplesToMs(diff(self.rpeak_get()))
+        ibi = self.samplesToMs(diff(self.rPeaks))
+
         l = Line(
             y=ibi,
             x=self.times(self.rPeaks[1:]) / 60.0,
@@ -247,8 +219,6 @@ class HEP_Subject:
             #
             return False
 
-        if self.rPeaks is None:
-            self.rpeak_get()
 
         # obsolete stuff
         # if 'heartbeatevents_py' in self.peakfile.load().keys():
@@ -257,7 +227,7 @@ class HEP_Subject:
 
         export = {
             'latency': arr(self.rPeaks) + 1,
-            'type'   : ['ECG' for i in itr(self.rPeaks)],
+            'type'   : ['ECG' for _ in itr(self.rPeaks)],
             'urevent': [i + 1 for i in itr(self.rPeaks)]
         }
         self.peakfile[self.alg.name()] = {
@@ -282,7 +252,7 @@ class HEP_Subject:
 
 def compare_IBI(s1, s2):
     import HEP_Params
-    comp = s1.samplesToMs(s2.rpeak_get() - s1.rpeak_get())
+    comp = s1.samplesToMs(s2.rPeaks - s1.rPeaks)
     times = s1.times(s1.rPeaks) / 60.0
     mistakes = arr(comp)[comp != 0]
     mistakeTs = arr(times)[comp != 0]

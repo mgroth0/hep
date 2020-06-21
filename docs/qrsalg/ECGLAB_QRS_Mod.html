@@ -4,4 +4,100 @@
         
         </script>
         
-        </head><body>Hello World!<br>Hello World!<br></body></html>
+        </head><body><div><div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">abc</span> <span style="color: #008000; font-weight: bold">import</span> ABC
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">import</span> <span style="color: #0000FF; font-weight: bold">math</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">numpy</span> <span style="color: #008000; font-weight: bold">import</span> ones
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">scipy.signal</span> <span style="color: #008000; font-weight: bold">import</span> bilinear, filtfilt, lfilter, butter
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mlib.boot.mutil</span> <span style="color: #008000; font-weight: bold">import</span> log_invokation
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">mlib.web.web</span> <span style="color: #008000; font-weight: bold">import</span> Shadow
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">from</span> <span style="color: #0000FF; font-weight: bold">qrsalg.PeakDetectionAlg</span> <span style="color: #008000; font-weight: bold">import</span> PeakDetectionAlg
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>DOC <span style="color: #666666">=</span> Shadow()
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #BA2121">&#39;&#39;&#39; CHECKLIST:</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Code, maybe with links</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Comments and longer text</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Citations (.bib) and links </span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Plots and subplots</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># Math (latex Mathematica, or another)</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #BA2121">&#39;&#39;&#39;</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #408080; font-style: italic"># SOURCE: https://u.nu/qy-4k</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">class</span> <span style="color: #0000FF; font-weight: bold">ECGLAB_QRS_Mod</span>(PeakDetectionAlg, ABC):
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>    <span style="color: #AA22FF">@log_invokation</span>()
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>    <span style="color: #008000; font-weight: bold">def</span> <span style="color: #0000FF">preprocess</span>(<span style="color: #008000">self</span>, ecg, Fs):
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        DOC<span style="color: #666666">.</span>children <span style="color: #666666">+=</span> [<span style="color: #BA2121">&quot;Hello World!&quot;</span>]
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic">#################</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic"># Bandpass Filter</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic">#################</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        Q <span style="color: #666666">=</span> <span style="color: #666666">3</span>  <span style="color: #408080; font-style: italic"># optimum ripple length for detection</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        k <span style="color: #666666">=</span> <span style="color: #666666">1.2</span>  <span style="color: #408080; font-style: italic"># gain, does not effect detection</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic"># FixMe: * 2 * math.pi... why?</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        w0 <span style="color: #666666">=</span> <span style="color: #666666">17</span> <span style="color: #666666">*</span> <span style="color: #666666">2</span> <span style="color: #666666">*</span> math<span style="color: #666666">.</span>pi
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        numerator <span style="color: #666666">=</span> k <span style="color: #666666">*</span> w0<span style="color: #666666">**2</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        denominator <span style="color: #666666">=</span> [<span style="color: #666666">1</span>, (w0 <span style="color: #666666">/</span> Q), w0<span style="color: #666666">**2</span>]
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        z, p <span style="color: #666666">=</span> bilinear(numerator, denominator, Fs)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        ecg_flt <span style="color: #666666">=</span> filtfilt(z, p, ecg)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        ecg_flt <span style="color: #666666">=</span> lfilter([<span style="color: #666666">1</span>, <span style="color: #666666">-1</span>], <span style="color: #666666">1</span>, ecg_flt)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic"># low-pass 30 Hz</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        [z, p] <span style="color: #666666">=</span> butter(<span style="color: #666666">8</span>, <span style="color: #666666">30</span> <span style="color: #666666">/</span> (Fs <span style="color: #666666">/</span> <span style="color: #666666">2</span>))
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        ecg_flt <span style="color: #666666">=</span> lfilter(z, p, ecg_flt)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        ecg_flt <span style="color: #666666">=</span> ecg_flt <span style="color: #666666">/</span> <span style="color: #008000">max</span>(<span style="color: #008000">abs</span>(ecg_flt))
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        ecg_flt <span style="color: #666666">=</span> ecg_flt<span style="color: #666666">**2</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #408080; font-style: italic"># integration</span>
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        N <span style="color: #666666">=</span> <span style="color: #008000">round</span>(<span style="color: #666666">0.150</span> <span style="color: #666666">*</span> Fs)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>        <span style="color: #008000; font-weight: bold">return</span> <span style="color: #666666">1</span> <span style="color: #666666">/</span> N <span style="color: #666666">*</span> lfilter(ones(N), <span style="color: #666666">1</span>, ecg_flt)
+</pre></div>
+<div class="highlight"><pre style="line-height: 125%"><span></span>
+</pre></div>
+</div><br>Hello World!<br><a style="position: fixed; bottom: 0;" href="../index.html">Back to Index</a><br></body></html>

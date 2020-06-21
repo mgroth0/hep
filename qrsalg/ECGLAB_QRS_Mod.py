@@ -10,6 +10,15 @@ from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 
 DOC = Shadow()
 
+''' CHECKLIST:
+# Code, maybe with links
+# Comments and longer text
+# Citations (.bib) and links 
+# Plots and subplots
+# Math (latex Mathematica, or another)
+'''
+
+
 # SOURCE: https://u.nu/qy-4k
 class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
     @log_invokation()

@@ -9,9 +9,10 @@ figs += [[compare_IBI(SUBJECTS[0], SUBJECTS[1])]]
 makefig(figs, file=PLOT_FILE, show=False)
 HTMLIndex(
     HTMLPage(
-        'main',
+        'Main',
         AutoHTMLImage(PLOT_FILE.rel_to(DOCS_FOLDER)),
     ),
     ECGLAB_QRS_Mod.DOC
-).write().open()
+).write()
+ECGLAB_QRS_Mod.DOC.open()
 if SAVE: [s.savepeaks() for s in SUBJECTS]

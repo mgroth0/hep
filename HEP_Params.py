@@ -23,7 +23,7 @@ SUBJECTS = [
     ) for x in range(2)]
 SAVE = False
 
-RAND_SLICE = slice(2 * SUBJECTS[0].get_Fs(), 8 * SUBJECTS[0].get_Fs())
+RAND_SLICE = slice(2 * SUBJECTS[0].Fs, 8 * SUBJECTS[0].Fs)
 
 # this was used for full
 # RAND_SLICE = slice(555 * SUBJECTS[0].get_Fs(), 562 * SUBJECTS[0].get_Fs())

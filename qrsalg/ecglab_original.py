@@ -93,7 +93,6 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
 
         log('return to signal')
         Rwave = arr(Rwave) - ret
-        # breakpoint()
         # assert Rwave[0] >= 1
         # if Rwave[0] < 1: Rwave[0] = 1
 
