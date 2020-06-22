@@ -35,7 +35,7 @@ HEP_DATA_FOLDER = File('_data')
 
 
 class HEP_Subject:
-    def __init__(self, sub_id, dataset, alg):
+    def __init__(self, sub_id, dataset, alg, rand_slice):
         self.id = sub_id
         self.rawfile = HEP_Data(sub_id + '.edf')
         self.alg = alg[0](version=alg[1])
@@ -51,6 +51,7 @@ class HEP_Subject:
             'TEN_MINUTE_TEST' : slice(0, 1200000),
             'FULL'            : slice(0, None),
         }[dataset]
+        self.RAND_SLICE = slice(rand_slice[0] * self.Fs, rand_slice[1] * self.Fs)
     @property
     @functools.lru_cache()
     def raw(self):
@@ -126,12 +127,11 @@ class HEP_Subject:
 
 
     def plot_example_rpeaks(self):
-        import HEP_Params
         time_mins = 'time (mins)'
         l = Line(
             y=self.ecg_flt,
             x=self.times() / 60.0,
-            xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
+            xlim=self.samplesToMins(self.RAND_SLICE),
             xlabel=time_mins,
             ylim='auto', add=False,
             hideYTicks=True
@@ -140,7 +140,7 @@ class HEP_Subject:
             y=self.ecg_flt[self.rPeaks],
             x=self.samplesToMins(self.rPeaks),
             item_color='b',
-            xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
+            xlim=self.samplesToMins(self.RAND_SLICE),
 
             title=self.alg.name() + ': example R peaks',
             add=False)
@@ -149,7 +149,7 @@ class HEP_Subject:
             l2 = Line(
                 y=self.nopl,
                 x=self.times() / 60.0,
-                xlim=self.samplesToMins(HEP_Params.RAND_SLICE),
+                xlim=self.samplesToMins(self.RAND_SLICE),
                 xlabel=time_mins,
                 ylim='auto',
                 item_color='g',
@@ -187,7 +187,6 @@ class HEP_Subject:
         return self.id
 
     def plot_IBIs(self):
-        import HEP_Params
         ibi = self.samplesToMs(diff(self.rPeaks))
 
         l = Line(
@@ -200,12 +199,12 @@ class HEP_Subject:
         )
         start = Line(
             y=[min(ibi, default=0), max(ibi, default=1)],
-            x=self.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
+            x=self.samplesToMins([self.RAND_SLICE.start, self.RAND_SLICE.start]),
             item_color='b',
         )
         stop = Line(
             y=[min(ibi, default=0), max(ibi, default=1)],
-            x=self.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
+            x=self.samplesToMins([self.RAND_SLICE.stop, self.RAND_SLICE.stop]),
             item_color='b',
         )
         t = MultiPlot(l, start, stop)
@@ -218,7 +217,6 @@ class HEP_Subject:
             log('skipping savepeaks for ' + str(self) + ' because data was loaded from file')
             #
             return False
-
 
         # obsolete stuff
         # if 'heartbeatevents_py' in self.peakfile.load().keys():
@@ -251,7 +249,6 @@ class HEP_Subject:
         ]
 
 def compare_IBI(s1, s2):
-    import HEP_Params
     comp = s1.samplesToMs(s2.rPeaks - s1.rPeaks)
     times = s1.times(s1.rPeaks) / 60.0
     mistakes = arr(comp)[comp != 0]
@@ -268,12 +265,12 @@ def compare_IBI(s1, s2):
     )
     start = Line(
         y=[min(comp), max(comp)],
-        x=s1.samplesToMins([HEP_Params.RAND_SLICE.start, HEP_Params.RAND_SLICE.start]),
+        x=s1.samplesToMins([s1.RAND_SLICE.start, s1.RAND_SLICE.start]),
         item_color='b',
     )
     stop = Line(
         y=[min(comp), max(comp)],
-        x=s1.samplesToMins([HEP_Params.RAND_SLICE.stop, HEP_Params.RAND_SLICE.stop]),
+        x=s1.samplesToMins([s1.RAND_SLICE.stop, s1.RAND_SLICE.stop]),
         item_color='b',
     )
     t = MultiPlot(l, start, stop)

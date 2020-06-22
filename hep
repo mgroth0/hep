@@ -1,2 +1,3 @@
 #!/bin/sh
+export MPLBACKEND=Agg
 exec "$HOME/miniconda3/envs/hep/bin/python" "hep.py" "$@"

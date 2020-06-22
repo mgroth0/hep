@@ -3,27 +3,28 @@ import math
 
 from numpy import ones
 from scipy.signal import bilinear, filtfilt, lfilter, butter
+from matplotlib import pyplot as plt
 
+from bib import bib_data, bib2html
 from mlib.boot.mutil import log_invokation
-from mlib.web.web import Shadow
+from mlib.proj.struct import PROJ
+from mlib.web.shadow import Shadow, AutoHTMLImage
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 
 DOC = Shadow()
 
-''' CHECKLIST:
-# Code, maybe with links
-# Comments and longer text
-# Citations (.bib) and links 
-# Plots and subplots
-# Math (latex Mathematica, or another)
-'''
-
-
-# SOURCE: https://u.nu/qy-4k
+# DOC: LINK:Original ECGLAB Paper,https://u.nu/qy-4k
 class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
     @log_invokation()
+    # DOC: START
     def preprocess(self, ecg, Fs):
-        DOC.children += ["Hello World!"]
+        with plt.style.context('dark_background'):
+            plt.plot(ecg)
+            PROJ.RESOURCES_FOLDER.mkdirs()['figs/qrsalg'].mkdirs()
+            im_file = PROJ.RESOURCES_FOLDER['figs/qrsalg/ECGLAB_QRS_Mod1.png']
+            plt.savefig(im_file.abspath)
+        DOC.children += [AutoHTMLImage(im_file)]
+        DOC.children += [bib2html(bib_data)]
         #################
         # Bandpass Filter
         #################
@@ -33,8 +34,24 @@ class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
         w0 = 17 * 2 * math.pi
         numerator = k * w0**2
         denominator = [1, (w0 / Q), w0**2]
-        z, p = bilinear(numerator, denominator, Fs)
 
+        # matplotlib.rcParams['text.usetex'] = True
+        plt.clf()
+        with plt.style.context('dark_background'):
+            plt.text(
+                x=0.5,
+                y=0.5,
+                s='whatever'
+                # s='$\displaystyle\sum_{n=1}^\infty'
+                #   r'\frac{-e^{i\pi}}{2^n}$'
+            )
+            PROJ.RESOURCES_FOLDER.mkdirs()['figs/qrsalg'].mkdirs()
+            im_file = PROJ.RESOURCES_FOLDER['figs/qrsalg/ECGLAB_QRS_Mod2.png']
+            plt.savefig(im_file.abspath)
+        DOC.children += [AutoHTMLImage(im_file)]
+        # matplotlib.rcParams['text.usetex'] = False
+
+        z, p = bilinear(numerator, denominator, Fs)
         ecg_flt = filtfilt(z, p, ecg)
         ecg_flt = lfilter([1, -1], 1, ecg_flt)
         # low-pass 30 Hz

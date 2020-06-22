@@ -1,5 +1,8 @@
 from mlib.boot.mutil import arr, Progress, mymax, vers, log_invokation, log
+from mlib.web.shadow import Shadow
 from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
+
+DOC = Shadow()
 
 # TODO: "original" is the goal, but currently its just HEPLAB_fast
 class ECGLAB_Original(ECGLAB_QRS_Mod):
