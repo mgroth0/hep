@@ -4,6 +4,8 @@ from HEP_lib import compare_IBI, HEP_Subject
 from mlib.web.shadow import Shadow
 from qrsalg import ManualPeakDetection, ECGLAB_Original
 
+project.init() # placeholder since I don't want project code always executed
+
 shadow = Shadow(show=True)
 
 # DOC: Link: bilinear,https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.bilinear.html
