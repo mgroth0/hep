@@ -1,0 +1,47 @@
+carvalho2002:
+  type: inproceedings
+  title: Development of a Matlab software for analysis of heart rate variability
+  authors:
+    -
+      first: João
+      middle: LA
+      last: De Carvalho
+    -
+      first: Adson
+      middle: F
+      last: Da Rocha
+    -
+      first: Francisco
+      middle: Assis
+      last: de Oliveira Nascimento
+    -
+      first: J
+      middle: Souza
+      last: Neto
+    -
+      first: Luiz
+      middle: F
+      last: Junqueira
+  booktitle: 6th International Conference on Signal Processing, 2002.
+  volume: 2
+  year: 2002
+  organization: IEEE
+  pages: 1488--1491
+  doi: 10.1109/ICOSP.2002.1180076
+  publisher: IEEE
+  url: https://github.com/perakakis/HEPLAB/blob/master/Documentation/Articles/icsp2002_ecglab.pdf
+  murl: https://u.nu/qy-4k
+perakakis2019:
+  type: software
+  authors:
+    -
+      first: Pandelis
+      last: Perakakis
+  title: "HEPLAB: a Matlab graphical interface for the preprocessing of the heartbeat-evoked potential"
+  month:  apr
+  year: 2019
+  publisher: Zenodo
+  version: v1.0.0
+  doi: 10.5281/zenodo.2649943
+  url: https://doi.org/10.5281/zenodo.2649943
+  murl: https://u.nu/-r1x7

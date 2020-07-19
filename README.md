@@ -1,35 +1,33 @@
 Installation
 -
+1. git clone --recurse-submodules https://github.com/mgroth0/hep
+1. install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+1. `conda update conda`
+1. `conda create --name hep --file requirements.txt` (requirements.txt is currently not working, TODO)
+1. might need to separately `conda install -c mgroth0 mlib-mgroth0`-- When updating, use `conda install --file requirements.txt;`
+1. `conda activate hep`
 
-1. `git clone --recurse-submodules https://github.com/mgroth0/hep`
 
-2. install [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-
-3. `conda update conda`
-
-4. `conda create --name hep --file requirements.txt`
--- When updating, use `conda install --file requirements.txt;pip install -r reqs_pip.txt`
-
-5. `conda activate hep`
-6. `pip install -r reqs_pip.txt`
-
-Basic Usage
+Usage
 -
+- ./hep
+- 
 
-- `./hep`
 
 Configuration
 -
 
-(todo)
+
+Testing
+-
+todo
 
 Development
-- 
+-
+- TODO: have separate development and user modes. Developer mode has PYTHONPATH link to mlib and instructions for resolving and developing in ide in parallel. User mode has mlib as normal dependency. might need to use `conda uninstall mlib-mgroth0 --force`. Also in these public readmes or reqs.txt I have to require a specific mlib version
+- ./hep build
 
-- use `conda list -e > requirements.txt; sed -i '' '/pypi/d' requirements.txt` to store dependencies.
-There are also a couple of pip dependencies manually written in reqs_pip.txt, since these cannot be found through conda
 
 Credits
 -
-
-- Isaac, Brain Modulation Lab
+Isaac, Brain Modulation Lab

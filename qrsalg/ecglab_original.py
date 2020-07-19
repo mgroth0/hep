@@ -1,36 +1,39 @@
-from mlib.boot.mutil import arr, Progress, mymax, vers, log_invokation, log
+from mlib.boot import log
+from mlib.boot.stream import arr
+from mlib.file import File
+from mlib.proj.struct import vers
+from mlib.term import log_invokation, Progress
 from mlib.web.shadow import Shadow
 from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
+from qrsalg.PeakDetectionAlg import find_local_maxima
 
-DOC = Shadow()
+DOC = Shadow(
+    bib='hep_bib.yml'
+)
 
 # TODO: "original" is the goal, but currently its just HEPLAB_fast
 class ECGLAB_Original(ECGLAB_QRS_Mod):
-    @classmethod
-    def versions(cls):
-        return {
-            '1'  : 'init',
-            '2.0': 'artifact catching',
-            '2.1': 'lookBack',
-            '2.2': 'plfilt flt2',
-            '3.0': 'SQUID accepter',
-            '3.1': 'area adjustment',
-            '4.0': 'safe_lmt adjustment',
-            '4.1': 'remove 1 sec trimming',
-            '4.2': 'remove heartbeat1 index check'
-        }
 
-    @log_invokation()
-    def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
+
+    # DOC: START
+
+    DOC.H2(
+        'R Peak Detection',
+        style={'text-align': 'center'}
+    )
+
+    @log_invokation
+    def rpeak_detect(
+            self,
+            ecg_raw,
+            Fs,
+            ecg_flt,
+            ecg_raw_nopl_high
+    ):
         log('start fast algorithm')
         # area to look for r events
         area = round(0.070 * Fs)
-        # area = round(0.1 * Fs)
 
-        # dif_thresh_gain = 1
-        # dif_thresh = None
-
-        # gain
         gain = 0.15
 
         # comparison limit: 2 sec
@@ -48,14 +51,15 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
         # initiate vars
         sz = len(ecg_flt)
         n = 0
-        Rwave = []
-        qrs = []
+        r_peak_indices = []
 
         safe_lmt = 0.0
 
         log('repeat for every cardiac cycle')
 
+        # DOC: STOP
         with Progress(sz, 'scanning', 'samples') as prog:
+            # DOC: START
             while n + 1 < sz:
                 if vers(self.version) >= vers(2.1):
                     comp_area = ecg_flt[max(0, n - comp):min(n + comp, sz)]
@@ -74,7 +78,7 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
                         # log(f'caught an art?n={n}/{sz}')
                         lmt = safe_lmt
                         if vers(self.version) >= vers(4):
-                            safe_lmt = safe_lmt * 1.001
+                            safe_lmt *= 1.001
                     else:
                         safe_lmt = lmt
 
@@ -82,50 +86,23 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
                     lmt = local_lmt
 
                 if (ecg_flt[n] > lmt) and (n + 1 < sz):
-                    Rwave.append(n)
-                    n = n + step
+                    r_peak_indices.append(n)
+                    n += step
                 else:
-                    n = n + step_10ms
+                    n += step_10ms
 
+                # DOC: STOP
                 prog.tick(n)
-
-        log('Locate R wave')
-        # initiate vars
-        # n = 1
-        mark_count = len(Rwave)
+                # DOC: START
 
         log('return to signal')
-        Rwave = arr(Rwave) - ret
-        # assert Rwave[0] >= 1
-        # if Rwave[0] < 1: Rwave[0] = 1
+        r_peak_indices = arr(r_peak_indices) - ret
 
-        log('locate R peaks')
-        # TODO: Should merge with fixPeaks()
-        with Progress(mark_count, 'searching back on', 'marks') as prog:
-            for i in range(mark_count):
-                # flag = True
+        return find_local_maxima(
+            r_peak_indices,
+            ecg_raw_nopl_high,
+            FIX_WIDTH=(8, area)
+        )
 
-                # while flag:
 
-                MINUS_AREA = min(8, Rwave[i])  # area
-                if sz >= (Rwave[i] + area) + 1:
-                    _, mark = mymax(abs(ecg_raw_nopl_high[Rwave[i] - MINUS_AREA:Rwave[i] + area]))
-                else:
-                    _, mark = mymax(abs(ecg_raw_nopl_high[Rwave[i] - MINUS_AREA:sz]))
-                    # if self.version < 3:
-                    #     flag = False
-                    # else:
-
-                mark = mark - MINUS_AREA
-
-                # calculate and save mark
-                mark = mark + Rwave[i]  # -1
-
-                qrs.append(mark)
-
-                prog.tick()
-
-        assert list(Rwave)
-        if not list(Rwave):
-            qrs = -1
-        return qrs
+DOC.write_bib()

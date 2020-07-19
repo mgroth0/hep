@@ -1,14 +1,13 @@
 from numpy import fix, mean, ones
 
 from mlib.boot.mlog import log
+from mlib.boot.stream import mymax
+from mlib.err import assert_int
+from mlib.term import Progress
 from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
-from mlib.boot.mutil import arr, Progress, mymax, bandstop
 
 class ecglab_slow(ECGLAB_QRS_Mod):
-    @classmethod
-    def versions(cls): return {
-        '1': 'init'
-    }
+
     def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high):
         ecg = self.ecg_raw  # only needed for ecglab_slow
 
@@ -16,9 +15,9 @@ class ecglab_slow(ECGLAB_QRS_Mod):
 
         log('start slow algorithm')
         # find peak
-        step = round(0.200 * fs)
-        area = 2 * fs
-        ret = assert_int(0.160 * fs)
+        step = round(0.200 * Fs)
+        area = 2 * Fs
+        ret = assert_int(0.160 * Fs)
 
         sz = len(ecg_flt)
         ecg_temp = -1500 * ones((sz, 1))
@@ -52,8 +51,8 @@ class ecglab_slow(ECGLAB_QRS_Mod):
             else:
                 n = n + 1
 
-        for kk in range(0, sz - fs, fs):
-            ecg[kk:kk + fs - 1] = ecg[kk:kk + fs - 1] - mean(ecg[kk:kk + fs - 1])
+        for kk in range(0, sz - Fs, Fs):
+            ecg[kk:kk + Fs - 1] = ecg[kk:kk + Fs - 1] - mean(ecg[kk:kk + Fs - 1])
 
         d1 = ret
         n = 0
@@ -61,7 +60,6 @@ class ecglab_slow(ECGLAB_QRS_Mod):
         prog = Progress(sz)
 
         while n + 1 <= sz:
-
             prog.tick(n)
 
             maxval = 0

@@ -1,10 +1,16 @@
+import importlib
+
 from abc import ABC, abstractmethod
 
 from numpy import inf
 from matplotlib import pyplot as plt
 
-from mlib.boot.mlog import log
-from mlib.boot.mutil import logverb, composed, flat, itr, assert_int, mymax, num2str, strcmp, disp
+from mlib.boot.lang import composed, isint, num2str, strcmp
+from mlib.boot.mlog import log, disp
+from mlib.boot.stream import flat, itr, mymax
+from mlib.err import assert_int
+from mlib.inspect import mn
+from mlib.term import Progress, log_invokation
 
 
 class PeakDetectionAlg(ABC):
@@ -16,13 +22,16 @@ class PeakDetectionAlg(ABC):
         self.version = version
 
     @classmethod
-    @abstractmethod
-    def versions(cls): pass
+    def versions(cls):
+        vm = importlib.import_module(
+            f'{mn(cls)}_versions'
+        )
+        return vm.VERSIONS
 
-    @composed(abstractmethod, logverb)
+    @composed(abstractmethod, log_invokation)
     def preprocess(self, ecg, Fs): pass
 
-    @composed(abstractmethod, logverb)
+    @composed(abstractmethod, log_invokation)
     def rpeak_detect(self, ecg_raw, Fs, ecg_flt, ecg_raw_nopl_high): pass
 
     def name(self):
@@ -42,28 +51,52 @@ class PeakDetectionAlg(ABC):
             ManualPeakDetection: 'manual'
         }[cls]
 
-    def fixpeaks(self, r_indices, ecg_flt, AUTO=True):
-        # (searchback)
-        FIX_WIDTH = 100
+def find_local_maxima(
+        r_indices,
+        ecg_flt,
+        FIX_WIDTH=100,
+        CROP_FIRST_LAST=False,
+        AUTO=True,
+        ABS=True
+):
+    # (searchback)
+    if isint(FIX_WIDTH):
+        FIX_WIDTH = (FIX_WIDTH, FIX_WIDTH)
 
-        r_indices = flat(r_indices)
-        y = []
-        for i in itr(r_indices):
-            y.append(ecg_flt[r_indices[i]])
+    if ABS:
+        myabs = abs
+    else:
+        myabs = lambda x: x
 
-        newlats = r_indices
-        marks = []
-        if AUTO:
-            log('automatically fixing all heartbeats')
+    r_indices = flat(r_indices)
+    y = []
+    for i in itr(r_indices):
+        y.append(ecg_flt[r_indices[i]])
+
+    newlats = r_indices
+    marks = []
+    if AUTO:
+        log('automatically fixing all heartbeats')
+    with Progress(len(r_indices), 'searching back on', 'marks') as prog:
         for i in itr(r_indices):
-            if i == 0 or i == len(r_indices) - 1:
+            if CROP_FIRST_LAST and (i == 0 or i == len(r_indices) - 1):
                 continue
+
+            fix_width_back = min(FIX_WIDTH[0], r_indices[0])
+            fix_width_forward = FIX_WIDTH[1]
+
             the_lat = assert_int(r_indices[i])
-            mn = the_lat - FIX_WIDTH
-            mx = the_lat + 1 + FIX_WIDTH
-            snippet = ecg_flt[mn:mx]
-            [M, I] = mymax(snippet)
-            fixed_lat = the_lat + I - FIX_WIDTH
+            mn = the_lat - fix_width_back
+            mx = the_lat + 1 + fix_width_forward
+
+            if len(ecg_flt) >= mx:
+                snippet = ecg_flt[mn:mx]
+            else:
+                snippet = ecg_flt[mn:len(ecg_flt)]
+
+            [M, I] = mymax(myabs(snippet))
+            fixed_lat = the_lat + I - fix_width_back
+
             if M != ecg_flt[the_lat]:
                 if not AUTO:
                     log('i=' + num2str(i) + '/' + num2str(len(r_indices)))
@@ -82,4 +115,5 @@ class PeakDetectionAlg(ABC):
                     marks = [marks, the_lat]
                 else:
                     disp('skipping')
-        return newlats
+            prog.tick()
+    return newlats

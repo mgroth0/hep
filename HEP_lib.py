@@ -2,10 +2,14 @@ import functools
 
 from numpy import double, diff
 
+from mlib.boot.lang import isinstsafe
+from mlib.boot.stream import arr, itr, ints
+from mlib.err import assert_int
+from mlib.fig.PlotData import PlotData, MultiPlot
 from mlib.boot.mlog import log
-from mlib.boot.mutil import assert_int, arr, File, isinstsafe, itr, nopl, nopl_high
+from mlib.file import File
+from mlib.math import nopl_high, nopl
 from qrsalg.ECGLAB_QRS_Mod import ECGLAB_QRS_Mod
-from mlib.FigData import Line, Scat, addToCurrentFigSet, MultiPlot
 class MNE_Set_Wrapper:
     def __init__(self, mne_set):
         self.mne_set = mne_set
@@ -37,6 +41,9 @@ HEP_DATA_FOLDER = File('_data')
 class HEP_Subject:
     def __init__(self, sub_id, dataset, alg, rand_slice):
         self.id = sub_id
+        self.mindex = self.id.split('_')[-1]
+        self.mindex = int(self.mindex)
+        assert self.mindex > 0
         self.rawfile = HEP_Data(sub_id + '.edf')
         self.alg = alg[0](version=alg[1])
         self.algmode = alg[2]
@@ -68,7 +75,8 @@ class HEP_Subject:
     def _loadpeaks(self):
         rPeaks = self.peakfile[self.alg.name()]['py'][0][0].flatten()
         rPeaks = rPeaks[rPeaks >= self.rawslice.start]
-        rPeaks = rPeaks[rPeaks < self.rawslice.stop]
+        if self.rawslice.stop is not None:
+            rPeaks = rPeaks[rPeaks < self.rawslice.stop]
         assert len(rPeaks.shape) == 1
         assert len(rPeaks) > 2
         return rPeaks
@@ -80,9 +88,10 @@ class HEP_Subject:
     @functools.lru_cache()
     def rPeaks(self):
         if self.algmode == 'LOAD':
-            return self._loadpeaks()
+            peaks = self._loadpeaks()
         else:
-            return self._rpeak_detect()
+            peaks = self._rpeak_detect()
+        return ints(peaks)
 
     @property
     @functools.lru_cache()
@@ -99,7 +108,7 @@ class HEP_Subject:
             t = self.raw.times(indices)
         return t
 
-    def times(self, indices=None):
+    def times(self, indices=None):  # seconds
         if indices is None: indices = self.rawslice
         if not isinstance(indices, slice):
             if len(indices) == 0: return arr()
@@ -128,35 +137,35 @@ class HEP_Subject:
 
     def plot_example_rpeaks(self):
         time_mins = 'time (mins)'
-        l = Line(
+        l = PlotData(
+            item_type='line',
             y=self.ecg_flt,
             x=self.times() / 60.0,
             xlim=self.samplesToMins(self.RAND_SLICE),
             xlabel=time_mins,
-            ylim='auto', add=False,
+            ylim='auto',
             hideYTicks=True
         )
-        s = Scat(
+        s = PlotData(
+            item_type='scatter',
             y=self.ecg_flt[self.rPeaks],
             x=self.samplesToMins(self.rPeaks),
             item_color='b',
             xlim=self.samplesToMins(self.RAND_SLICE),
 
-            title=self.alg.name() + ': example R peaks',
-            add=False)
+            title=self.alg.name() + ': example R peaks')
         plots = (l, s)
         if isinstsafe(self.alg, ECGLAB_QRS_Mod):
-            l2 = Line(
+            l2 = PlotData(
+                item_type='line',
                 y=self.nopl,
                 x=self.times() / 60.0,
                 xlim=self.samplesToMins(self.RAND_SLICE),
                 xlabel=time_mins,
                 ylim='auto',
-                item_color='g',
-                add=False)
+                item_color='g')
             plots = tuple(list(plots) + [l2])
         t = MultiPlot(*plots)
-        addToCurrentFigSet(t)
         return t
 
     def samplesToMs(self, indices):
@@ -189,26 +198,27 @@ class HEP_Subject:
     def plot_IBIs(self):
         ibi = self.samplesToMs(diff(self.rPeaks))
 
-        l = Line(
+        l = PlotData(
+            item_type='line',
             y=ibi,
             x=self.times(self.rPeaks[1:]) / 60.0,
             title=self.alg.name() + ': IBIs',
             ylabel='IBI (ms)',
-            xlabel='time (mins)',
-            add=False
+            xlabel='time (mins)'
         )
-        start = Line(
+        start = PlotData(
+            item_type='line',
             y=[min(ibi, default=0), max(ibi, default=1)],
             x=self.samplesToMins([self.RAND_SLICE.start, self.RAND_SLICE.start]),
             item_color='b',
         )
-        stop = Line(
+        stop = PlotData(
+            item_type='line',
             y=[min(ibi, default=0), max(ibi, default=1)],
             x=self.samplesToMins([self.RAND_SLICE.stop, self.RAND_SLICE.stop]),
             item_color='b',
         )
         t = MultiPlot(l, start, stop)
-        addToCurrentFigSet(t)
         return t
 
 
@@ -256,23 +266,24 @@ def compare_IBI(s1, s2):
     for c, t in zip(mistakes, mistakeTs):
         log(f'found a possible mis-detect of {c} at {t}')
     log(f'{len(mistakes)=}')
-    l = Line(
+    l = PlotData(
+        item_type='line',
         y=comp,
         x=times,
         ylabel='change (ms)',
-        title=f'{s1.alg.name()} -> {s2.alg.name()}',
-        add=False
+        title=f'{s1.alg.name()} -> {s2.alg.name()}'
     )
-    start = Line(
+    start = PlotData(
+        item_type='line',
         y=[min(comp), max(comp)],
         x=s1.samplesToMins([s1.RAND_SLICE.start, s1.RAND_SLICE.start]),
         item_color='b',
     )
-    stop = Line(
+    stop = PlotData(
+        item_type='line',
         y=[min(comp), max(comp)],
         x=s1.samplesToMins([s1.RAND_SLICE.stop, s1.RAND_SLICE.stop]),
         item_color='b',
     )
     t = MultiPlot(l, start, stop)
-    addToCurrentFigSet(t)
     return t
