@@ -371,6 +371,7 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
             [[MultiPlot(
                 PlotData(
                     unitscale_demean(ecg_raw_nopl_high[_PLOT_SLICE]),
+                    title='R Peaks After Found Local Maxima',
                     hideYTicks=True,
                     item_type='line',
                     item_color='r',
@@ -393,6 +394,7 @@ class ECGLAB_Original(ECGLAB_QRS_Mod):
             [[MultiPlot(
                 PlotData(
                     unitscale_demean(ecg_raw_nopl_high[_PLOT_SLICE_SMALL]),
+                    title='R Peaks After Found Local Maxima -- zoomed',
                     hideYTicks=True,
                     item_type='line',
                     item_color='r',
