@@ -1,0 +1,26 @@
+<!DOCTYPE html><html><head><meta content="text/html;charset=utf-8" http-equiv=Content-Type><meta content=utf-8 http-equiv=encoding><meta http-equiv=CACHE-CONTROL content=NO-CACHE><link href=style.css rel=stylesheet><style></style><script src=https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js></script><script src=https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js></script><link href=https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css rel=stylesheet><script src=platform.js></script><script src=mlib.js></script><script>
+
+        onload_funs.push( () => {
+            			//GEN
+			//GEN
+			//GEN
+var links = document.getElementsByTagName('a')			//GEN
+for (link of links) {			//GEN
+    if (link.getAttribute("href").startsWith("#")) {			//GEN
+        link.onclick = (e) => {			//GEN
+            link.scrollIntoView()			//GEN
+            return false			//GEN
+        }   			//GEN
+    }			//GEN
+} 			//GEN
+			//GEN
+			//GEN
+            
+        })
+        
+</script></head><body style><div><h2 style="text-align: center; ">Preprocessing 2</h2><div class=highlight><pre style="line-height: 125%"><span></span><span style="color: #6400EB; font-weight: bold">def</span> <span style="color: #FF5EB5">nopl_high</span>(<span style="color: #DCDDFF">raw</span>, <span style="color: #DCDDFF">Fs</span>):
+    <span style="color: #353535"><span># this is used later in find_local_maxima()</span></span>
+    <span style="color: #DCDDFF">sig_nopl_high</span> = <span style="color: #DCDDFF">bandstop</span>(<span style="color: #DCDDFF">raw</span>, <span style="color: #00EBAA; font-style: italic">59</span>, <span style="color: #00EBAA; font-style: italic">61</span>, <span style="color: #DCDDFF">Fs</span>, <span style="color: #00EBAA; font-style: italic">1</span>)  <span style="color: #353535"><span># basic power line removal</span></span>
+    <span style="color: #DCDDFF">sig_nopl_high</span> = <span style="color: #DCDDFF">highpass</span>(<span style="color: #DCDDFF">sig_nopl_high</span>, <span style="color: #00EBAA; font-style: italic">1</span>, <span style="color: #DCDDFF">Fs</span>)
+    <span style="color: #6400EB; font-weight: bold">return</span> <span style="color: #DCDDFF">sig_nopl_high</span>
+</pre></div><div></div></div></body></html>

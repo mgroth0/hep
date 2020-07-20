@@ -1,0 +1,72 @@
+<!DOCTYPE html><html><head><meta content="text/html;charset=utf-8" http-equiv=Content-Type><meta content=utf-8 http-equiv=encoding><meta http-equiv=CACHE-CONTROL content=NO-CACHE><link href=style.css rel=stylesheet><style></style><script src=https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js></script><script src=https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js></script><link href=https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css rel=stylesheet><script src=platform.js></script><script src=mlib.js></script><script>
+
+        onload_funs.push( () => {
+            			//GEN
+			//GEN
+			//GEN
+var links = document.getElementsByTagName('a')			//GEN
+for (link of links) {			//GEN
+    if (link.getAttribute("href").startsWith("#")) {			//GEN
+        link.onclick = (e) => {			//GEN
+            link.scrollIntoView()			//GEN
+            return false			//GEN
+        }   			//GEN
+    }			//GEN
+} 			//GEN
+			//GEN
+			//GEN
+            
+        })
+        
+</script></head><body style><div><h2 style="text-align: center; ">R Peak Detection</h2><div class=highlight><pre style="line-height: 125%"><span></span>    <span style="color: #6400EB; font-weight: bold">def</span> <span style="color: #FF5EB5">detect_rpeaks</span>(
+            <span style="color: #DCDDFF">Fs</span>,
+            <span style="color: #DCDDFF">ecg_flt</span>,  <span style="color: #353535"><span># output of preprocess()</span></span>
+            <span style="color: #DCDDFF">ecg_raw_nopl_high</span>  <span style="color: #353535"><span># output of nopl_high()</span></span>
+    ):
+</pre></div><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image0.png alt="an image" width=500></div><br><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image1.png alt="an image" width=500></div><br><h3 style="text-align: center; ">Adaptive Threshold Detector</h3><div class=highlight><pre style="line-height: 125%"><span></span>        <span style="color: #DCDDFF">THRESH</span> = <span style="color: #00EBAA; font-style: italic">0.15</span>  <span style="color: #353535"><span># threshold for peak detection </span><a href=#perakakis2019>[2]</a></span>
+        <span style="color: #DCDDFF">THRESH_ADAPT_WIN_WIDTH</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">2</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># 2 sec </span><a href=#perakakis2019>[2]</a></span>
+        <span style="color: #DCDDFF">ART_THRESH_ADAPT_WIN_WIDTH</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">0.2</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># this is for the new artifact detection mechanism below</span></span>
+        <span style="color: #DCDDFF">STEP</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">0.350</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># minimum interval between marks (350ms) </span><a href=#carvalho2002>[1]</a><a href=#perakakis2019>[2]</a></span>
+        <span style="color: #DCDDFF">STEP_SMALL</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">0.01</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># 10ms step </span><a href=#perakakis2019>[2]</a></span>
+        <span style="color: #353535"><span># initiate variables</span></span>
+        <span style="color: #DCDDFF">sz</span> = <span style="color: #DCDDFF">len</span>(<span style="color: #DCDDFF">ecg_flt</span>)  <span style="color: #353535"><span># size of signal</span></span>
+        <span style="color: #DCDDFF">n</span> = <span style="color: #00EBAA; font-style: italic">0</span>  <span style="color: #353535"><span># current sample index</span></span>
+        <span style="color: #DCDDFF">r_peak_indices</span> = []  <span style="color: #353535"><span># where detected R peak indices are stored</span></span>
+        <span style="color: #DCDDFF">safe_lmt</span> = <span style="color: #00EBAA; font-style: italic">0.0</span>  <span style="color: #353535"><span># holds the "safe" threshold, used in an original artifact detection mechanism detailed below</span></span>
+            <span style="color: #6400EB; font-weight: bold">while</span> <span style="color: #DCDDFF">n</span> + <span style="color: #00EBAA; font-style: italic">1</span> &lt; <span style="color: #DCDDFF">sz</span>:  <span style="color: #353535"><span># scan entire signal</span></span>
+                <span style="color: #DCDDFF">comp_area</span> = <span style="color: #DCDDFF">ecg_flt</span>[  <span style="color: #353535"><span># the regular window for threshold calculation</span></span>
+                            <span style="color: #DCDDFF">max</span>(<span style="color: #00EBAA; font-style: italic">0</span>, <span style="color: #DCDDFF">n</span> - <span style="color: #DCDDFF">THRESH_ADAPT_WIN_WIDTH</span>):
+                            <span style="color: #DCDDFF">min</span>(<span style="color: #DCDDFF">n</span> + <span style="color: #DCDDFF">THRESH_ADAPT_WIN_WIDTH</span>, <span style="color: #DCDDFF">sz</span>)
+                            ]
+                <span style="color: #DCDDFF">local_comp_area</span> = <span style="color: #DCDDFF">ecg_flt</span>[  <span style="color: #353535"><span># the small window for for artifact detection</span></span>
+                                  <span style="color: #DCDDFF">max</span>(<span style="color: #00EBAA; font-style: italic">0</span>, <span style="color: #DCDDFF">n</span> - <span style="color: #DCDDFF">ART_THRESH_ADAPT_WIN_WIDTH</span>):
+                                  <span style="color: #DCDDFF">min</span>(<span style="color: #DCDDFF">n</span> + <span style="color: #DCDDFF">ART_THRESH_ADAPT_WIN_WIDTH</span>, <span style="color: #DCDDFF">sz</span>)
+                                  ]
+                <span style="color: #DCDDFF">lmt</span> = <span style="color: #DCDDFF">THRESH</span> * <span style="color: #DCDDFF">max</span>(<span style="color: #DCDDFF">abs</span>(<span style="color: #DCDDFF">comp_area</span>))  <span style="color: #353535"><span># R peak threshold</span></span>
+                <span style="color: #DCDDFF">local_lmt</span> = <span style="color: #DCDDFF">THRESH</span> * <span style="color: #DCDDFF">max</span>(<span style="color: #DCDDFF">abs</span>(<span style="color: #DCDDFF">local_comp_area</span>))  <span style="color: #353535"><span># artifact threshold</span></span>
+</pre></div><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image2.png alt="an image" width=500></div><br><div class=highlight><pre style="line-height: 125%"><span></span>                <span style="color: #6400EB; font-weight: bold">if</span> <span style="color: #DCDDFF">lmt</span> &gt; <span style="color: #00EBAA; font-style: italic">1.5</span> * <span style="color: #DCDDFF">safe_lmt</span> and <span style="color: #DCDDFF">safe_lmt</span> != <span style="color: #00EBAA; font-style: italic">0.0</span>:
+                    <span style="color: #353535"><span># This original check notices when the threshold suddenly jumps. In my tests I found this to only detect large artifacts</span></span>
+                    <span style="color: #DCDDFF">lmt</span> = <span style="color: #DCDDFF">safe_lmt</span>  <span style="color: #353535"><span># since an artifact was detected, use the old "safe" threshold</span></span>
+                    <span style="color: #DCDDFF">safe_lmt</span> *= <span style="color: #00EBAA; font-style: italic">1.001</span>  <span style="color: #353535"><span># increment the acceptable threshold gradually to eventually rejoin lmt</span></span>
+                <span style="color: #6400EB; font-weight: bold">else</span>:
+                    <span style="color: #DCDDFF">safe_lmt</span> = <span style="color: #DCDDFF">lmt</span>  <span style="color: #353535"><span># no artifact was detected, so store this threshold in case it should be used next time</span></span>
+                <span style="color: #6400EB; font-weight: bold">if</span> <span style="color: #DCDDFF">local_lmt</span> &gt; <span style="color: #00EBAA; font-style: italic">2</span> * <span style="color: #DCDDFF">lmt</span>:  <span style="color: #353535"><span># another original artifact detection mechanism</span></span>
+                    <span style="color: #353535"><span># if the local threshold is much larger than the normal one, use the local one instead</span></span>
+                    <span style="color: #353535"><span># this should help adjust the location of some detected peaks when the peak was very large</span></span>
+                    <span style="color: #DCDDFF">lmt</span> = <span style="color: #DCDDFF">local_lmt</span>
+                <span style="color: #6400EB; font-weight: bold">if</span> (<span style="color: #DCDDFF">ecg_flt</span>[<span style="color: #DCDDFF">n</span>] &gt; <span style="color: #DCDDFF">lmt</span>) and (<span style="color: #DCDDFF">n</span> + <span style="color: #00EBAA; font-style: italic">1</span> &lt; <span style="color: #DCDDFF">sz</span>):
+                    <span style="color: #DCDDFF">r_peak_indices</span>.<span style="color: #DCDDFF">append</span>(<span style="color: #DCDDFF">n</span>)  <span style="color: #353535"><span># this n passed the threshod, so add it to the stored r peaks</span></span>
+                    <span style="color: #DCDDFF">n</span> += <span style="color: #DCDDFF">STEP</span>  <span style="color: #353535"><span># advance 350 ms and start scanning the next cardiac cycle</span></span>
+                <span style="color: #6400EB; font-weight: bold">else</span>:
+                    <span style="color: #DCDDFF">n</span> += <span style="color: #DCDDFF">STEP_SMALL</span>  <span style="color: #353535"><span># jump 10 ms forward</span></span>
+</pre></div><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image3.png alt="an image" width=500></div><br><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image4.png alt="an image" width=500></div><br><h3 style="text-align: center; ">Return to Signal</h3><div class=highlight><pre style="line-height: 125%"><span></span>        <span style="color: #DCDDFF">RETURN</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">0.030</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># Not sure where </span><a href=#perakakis2019>[2]</a><span> got this number</span></span>
+        <span style="color: #DCDDFF">r_peak_indices</span> = <span style="color: #DCDDFF">arr</span>(<span style="color: #DCDDFF">r_peak_indices</span>) - <span style="color: #DCDDFF">RETURN</span>  <span style="color: #353535"><span># </span><a href=#perakakis2019>[2]</a><span> probably was fixing delayed peaks</span></span>
+</pre></div><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image5.png alt="an image" width=500></div><br><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image6.png alt="an image" width=500></div><br><h3 style="text-align: center; ">Find Local Maxima</h3><div class=highlight><pre style="line-height: 125%"><span></span>        <span style="color: #353535"><span># searchback algorithm: adjust peaks to local maxima </span><a href=#carvalho2002>[1]</a><a href=#perakakis2019>[2]</a></span>
+        <span style="color: #DCDDFF">AREA</span> = <span style="color: #DCDDFF">round</span>(<span style="color: #00EBAA; font-style: italic">0.070</span> * <span style="color: #DCDDFF">Fs</span>)  <span style="color: #353535"><span># local maxima window</span></span>
+        <span style="color: #DCDDFF">r_peak_indices</span> = <span style="color: #DCDDFF">find_local_maxima</span>(
+            <span style="color: #DCDDFF">r_peak_indices</span>,
+            <span style="color: #DCDDFF">ecg_raw_nopl_high</span>,  <span style="color: #353535"><span># we only use the "original" signal here</span></span>
+            <span style="color: #DCDDFF">FIX_WIDTH</span>=(<span style="color: #00EBAA; font-style: italic">8</span>, <span style="color: #DCDDFF">AREA</span>)
+        )
+</pre></div><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image7.png alt="an image" width=500></div><br><div style="width: 100%; "><img style="width: 75%; display: block; margin: auto; " src=../../resources/qrsalg/ecglab_original/image8.png alt="an image" width=500></div><br><div class=highlight><pre style="line-height: 125%"><span></span>        <span style="color: #6400EB; font-weight: bold">return</span> <span style="color: #DCDDFF">r_peak_indices</span>
+</pre></div><div><h3 style="text-align: center; ">References</h3><div><div id=carvalho2002>1. De Carvalho, J., Da Rocha, A., de Oliveira Nascimento, F., Neto, J. & Junqueira, L. Development of a Matlab software for analysis of heart rate variability. <b>2</b>, 1488-1491 (IEEE, 2002) (<a target=_blank href=https://u.nu/qy-4k>link</a>)</div><br><div id=perakakis2019>2. Perakakis, P. HEPLAB: a Matlab graphical interface for the preprocessing of the heartbeat-evoked potential. (Zenodo, 2019) (Version v1.0.0) (<a target=_blank href=https://u.nu/-r1x7>link</a>)</div><br></div></div></div></body></html>

@@ -5,21 +5,26 @@ from scipy.signal import bilinear, filtfilt, lfilter
 
 from mlib.boot.stream import arr
 from mlib.math import butter
+import mlib.math
 from mlib.term import log_invokation
 from mlib.web.html import H1, H3
 from mlib.web.shadow import Shadow
 from qrsalg.PeakDetectionAlg import PeakDetectionAlg
 
-
+mlib.math.init_shadow()
 DOC = Shadow(
     show=True,
     include_index_link=False,
     bib='hep_bib.yml',
-    includes=["qrsalg.ecglab_original"]
+    includes=[
+        '../mlib/mlib.math',
+        "qrsalg.ecglab_original"
+    ]
 )
 
 TEST_FILTERS = False
 _PLOT_SLICE = slice(1000, None)
+_PLOT_SLICE_SMALL = slice(5000, 8500)
 
 class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
     # DOC: START
@@ -115,6 +120,11 @@ class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
             xlabel='seconds'
         )
 
+        DOC.math(
+            'De Carvalho et al.\'s Derivative Filter',
+            'y[n]=x[n]-x[n-1]'
+        )
+
         ecg_flt = lfilter([1, -1], 1, ecg_flt)  # Derivative Filter  DOC:CITE[carvalho2002]DOC:CITE[perakakis2019]
 
         DOC.plot(
@@ -181,7 +191,14 @@ class ECGLAB_QRS_Mod(PeakDetectionAlg, ABC):
             style={'text-align': 'center'}
         )
 
-        # Integration was not in original De Carvalho algorithm. Unsure why Perakakis added this DOC:CITE[perakakis2019]
+        DOC.math(
+            'De Carvalho et al.\'s N-point moving average Filter',
+            r'''
+            y[n]=\frac{1}{N}\sum_{i=0}^{N-1}x[n-i]
+            '''
+        )
+
+        # N-point moving average filter DOC:CITE[carvalho2002]DOC:CITE[perakakis2019]
         N = round(0.150 * Fs)
         ecg_flt = 1 / N * lfilter(ones(N), 1, ecg_flt)
 
